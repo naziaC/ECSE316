@@ -6,10 +6,16 @@ ECSE 316 Assignment 1
 # Import libraries
 import argparse
 import socket
+import binascii
+import random
 
-def dnsClient ():
+def dnsClient (args):
     # Create UDP socket
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    
+    # Connect to the web server
+    print('Connecting to server...\n' + createQuery(args))
+    # udpSocket.sendto(createQuery(args), (args.server, args.port))
 
 def parseInput ():
     # Parse user input
@@ -18,7 +24,7 @@ def parseInput ():
     parser.add_argument('-t', '--timeout', type=int, default=5, help="""
         Timeout value: How long to wait, in seconds, before retransmitting an unanswered query. Default value: 5
         """) 
-    parser.add_argument('-r', '--max-retries', type=int, default=3, help="""
+    parser.add_argument('-r', '--max_retries', type=int, default=3, help="""
         Maximum number of retries: Maximum number of times to retransmit an unanswered query before giving up. Default value: 3
         """)
     parser.add_argument('-p', '--port', type=int, default=53, help="""
@@ -38,8 +44,72 @@ def parseInput ():
     
     return parser.parse_args()
     
+def createQuery(args):
+    header = createHeader()
+    question = createQuestion(args)
+    return header + question
+
+def createHeader():
+    # Create randomized 16-bit number for ID
+    id = str(bin(random.randint(0, 65535))).replace('0b', '').zfill(16)
+    # QR = 0
+    qr = '0'
+    # OPCODE = 0
+    opcode = '0000'
+    # AA = 0 (not meaningful in query)
+    aa = '0'
+    # TC = 0 (not meaningful in query)
+    tc = '0'
+    # RD = 1
+    rd = '1'
+    # RA = 0 (not meaningful in query)
+    ra = '0'
+    # Z = 0
+    z = '000'
+    # RCODE = 0 (not meaningful in query)
+    rc = '0000'
+    # QDCOUNT = 1
+    qdcount = '0000000000000001'
+    # ANCOUNT = 0 (not meaningful in query)
+    ancount = '0000000000000000'
+    # NSCOUNT = 0 (not meaningful in query)
+    nscount = '0000000000000000'
+    # ARCOUNT = 0 (not meaningful in query)
+    arcount = '0000000000000000'
+
+    # concatenate all the header fields
+    header = id + qr + opcode + aa + tc + rd + ra + z + rc + qdcount + ancount + nscount + arcount
+
+    print('header: ' + header)
+    return header
+
+def createQuestion(args):
+    # QNAME = domain name [TODO: check if this is correct]
+    args_arr = args.name.split('.')
+    qname = ''
+    for i in range(len(args_arr)):
+        # convert to 8-bit unsigned integer binary representation
+        qname += bin(int(len(args_arr[i]))).replace('0b', '').zfill(8)
+        for j in range(len(args_arr[i])):
+            qname += str((bin(int(binascii.hexlify(args_arr[i][j].encode('utf-8')), 16)).replace('0b', '')))
+    qname += '0000'
+
+    # QTYPE = 1 (A)
+    if (args.mx):
+        qtype = '0000000000001111'
+    elif (args.ns):
+        qtype = '0000000000000010'
+    else:
+        qtype = '0000000000000001'
+    # QCLASS = 1
+    qclass = '0000000000000001'
+
+    # concatenate all the question fields
+    question = qname + qtype + qclass
+
+    print('question' + question)
+    return question
 
 # Program entry point
 if __name__ == "__main__":
-    parseInput()
-    dnsClient()
+    dnsClient(parseInput())

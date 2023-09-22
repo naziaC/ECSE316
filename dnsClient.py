@@ -15,7 +15,9 @@ def dnsClient (args):
     
     # Connect to the web server
     print('Connecting to server...\n' + createQuery(args))
-    # udpSocket.sendto(createQuery(args), (args.server, args.port))
+
+    # [TODO: send query to server]
+    # udpSocket.sendto(createQuery(args).encode('utf-8'), (args.server, args.port))
 
 def parseInput ():
     # Parse user input

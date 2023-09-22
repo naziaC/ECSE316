@@ -1,3 +1,8 @@
+"""
+@author: Yu An Lu, Nazia Chowdhury
+ECSE 316 Assignment 1
+"""
+
 import sys
 
 # Default values

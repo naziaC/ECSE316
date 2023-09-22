@@ -7,22 +7,12 @@ ECSE 316 Assignment 1
 import argparse
 import socket
 
-# Default values
-timeout = 5
-max_retries = 3
-port = 53
-serverType = 'A'
-server = None
-name = None
-
-
 def dnsClient ():
     # Create UDP socket
-    print("ToDo")
+    udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def parseInput ():
     # Parse user input
-    # todo - fix parser
     parser = argparse.ArgumentParser(description="DNS Client Argument Parser")
     
     parser.add_argument('-t', '--timeout', type=int, default=5, help="""
@@ -46,20 +36,7 @@ def parseInput ():
     parser.add_argument('server', type=str, help="Server: IPv4 address of the DNS server, in a.b.c.d.format")
     parser.add_argument('name', type=str, help="Domain name to query for")
     
-    arguments = parser.parse_args()
-    
-    timeout = arguments.timeout
-    max_retries = arguments.max_retries
-    port = arguments.port
-    server = arguments.server
-    name = arguments.name
-    if arguments.mx:
-        serverType = 'MX'
-        # Check for -ns flag
-    elif arguments.ns:
-        serverType = 'NS'
-    server = arguments.server
-    name = arguments.name
+    return parser.parse_args()
     
 
 # Program entry point

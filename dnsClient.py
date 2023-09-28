@@ -89,31 +89,34 @@ def createHeader():
     return header
 
 def createQuestion(args):
+    print('domain name: ' + args.name)
     # QNAME = domain name [TODO: check if this is correct]
     args_arr = args.name.split('.')
     qname = ''
     for i in range(len(args_arr)):
         # convert to 8-bit unsigned integer binary representation
-        qname += bin(int(len(args_arr[i]))).replace('0b', '').zfill(8)
+        print('args_arr[' + str(i) + ']: ' + args_arr[i])
+        qname += str(hex(int(len(args_arr[i]))).replace('0x', '').zfill(2))
+        print('qname: ' + qname)
         for j in range(len(args_arr[i])):
-            qname += str((bin(int(binascii.hexlify(args_arr[i][j].encode('utf-8')), 16)).replace('0b', '')))
-    qname += '0000'
+            print('args_arr[' + str(i) + '][' + str(j) + ']: ' + args_arr[i][j])
+            qname += str((hex(int(binascii.hexlify(args_arr[i][j].encode('utf-8')), 16)).replace('0x', '')).zfill(2))
+    qname += '00'
+
+    print('qname: ' + qname)
 
     # QTYPE = 1 (A)
     if (args.mx):
-        qtype = '0000000000001111'
+        qtype = '000f'
     elif (args.ns):
-        qtype = '0000000000000010'
+        qtype = '0002'
     else:
-        qtype = '0000000000000001'
+        qtype = '0001'
     # QCLASS = 1
-    qclass = '0000000000000001'
+    qclass = '0001'
 
     # concatenate all the question fields
     question = qname + qtype + qclass
-
-    # transform question from binary to hex
-    question = hex(int(question, 2)).replace('0x', '').zfill(4)
 
     print('question: ' + question)
     return question

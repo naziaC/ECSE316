@@ -82,6 +82,9 @@ def createHeader():
     # concatenate all the header fields
     header = id + qr + opcode + aa + tc + rd + ra + z + rc + qdcount + ancount + nscount + arcount
 
+    # transform header from binary to hex
+    header = hex(int(header, 2)).replace('0x', '').zfill(4)
+
     print('header: ' + header)
     return header
 
@@ -109,7 +112,10 @@ def createQuestion(args):
     # concatenate all the question fields
     question = qname + qtype + qclass
 
-    print('question' + question)
+    # transform question from binary to hex
+    question = hex(int(question, 2)).replace('0x', '').zfill(4)
+
+    print('question: ' + question)
     return question
 
 # Program entry point

@@ -10,14 +10,18 @@ import binascii
 import random
 import time
 
+header = None
+domain_name = None
+question = None
 query = None
+qtype = None
 answer = None
 t_start = None
 t_end = None
 
 def dnsClient (args):
     # Create UDP socket
-    global answer, query
+    global answer, query, qtype, t_start, t_end
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udpSocket.settimeout(args.timeout)
     t_start = time.time()
@@ -26,14 +30,13 @@ def dnsClient (args):
     print('DnsClient sending request for: ' + args.name + '\n')
     print('Server: ' + args.server[1:] + '\n')
     if (args.mx):
-        qtype = 'MX'
+        qtype_string = 'MX'
     elif (args.ns):
-        qtype = 'NS'
+        qtype_string = 'NS'
     else:
-        qtype = 'A'
-    print('Request type: ' + qtype + '\n')
+        qtype_string = 'A'
+    print('Request type: ' + qtype_string + '\n')
     
-
     # Send query to server for max number of retries
     for i in range(args.max_retries):
         print('Sending query to server...')
@@ -49,8 +52,6 @@ def dnsClient (args):
             print('ERROR \t [Timeout event -  Resending query to server...]')
             n_retries = n_retries + 1
             continue
-        
-    # udpSocket.close()
 
     if answer == None or len(answer) == 0:
         print('ERROR \t [Maximum number of retries reached - Exiting program]')
@@ -64,39 +65,6 @@ def dnsClient (args):
         
         print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
         parseResponse()
-    
-def parseResponse ():
-    print("***Answer Section ([num-answers] records)*** \n")
-    # Parse response from server
-    global answer
-    header = answer[0][0:4]
-    question = answer[0][12:]
-    answer = answer[0][12 + len(question):]
-    rcode = header[3:]
-    ancount = header[6:8]
-    nscount = header[8:10]
-    arcount = header[10:12]
-    
-    # Check if RCODE is 0
-    if rcode != '0000':
-        print('ERROR \t [RCODE is not 0]')
-        return
-    # Check if ANCOUNT is 0
-    elif ancount == '0000':
-        print('ERROR \t [ANCOUNT is 0]')
-        return
-    # Check if NSCOUNT is 0
-    elif nscount != '0000':
-        print('ERROR \t [NSCOUNT is not 0]')
-        return
-    # Check if ARCOUNT is 0
-    elif arcount != '0000':
-        print('ERROR \t [ARCOUNT is not 0]')
-        return
-    else:
-        print('Response received after [' + str(t_end - t_start) + '] seconds')
-        
-
     
 def parseInput ():
     # Parse user input
@@ -126,13 +94,16 @@ def parseInput ():
     return parser.parse_args()
     
 def createQuery(args):
-    global query
-    header = createHeader()
-    question = createQuestion(args)
+    global header, question, query
+    createHeader()
+    createQuestion(args)
+
     query = header + question
     print('DNS Request Message: ' + query)
 
 def createHeader():
+    global header
+
     # Create randomized 16-bit number for ID
     id = str(bin(random.randint(0, 65535))).replace('0b', '').zfill(16)
     # QR = 0
@@ -166,9 +137,8 @@ def createHeader():
     # transform header from binary to hex
     header = hex(int(header, 2)).replace('0x', '').zfill(4)
 
-    return header
-
 def createQuestion(args):
+    global domain_name, qtype, query, question
     # QNAME = domain name [TODO: check if this is correct]
     args_arr = args.name.split('.')
     qname = ''
@@ -177,6 +147,7 @@ def createQuestion(args):
         qname += str(hex(int(len(args_arr[i]))).replace('0x', '').zfill(2))
         for j in range(len(args_arr[i])):
             qname += str((hex(int(binascii.hexlify(args_arr[i][j].encode('utf-8')), 16)).replace('0x', '')).zfill(2))
+    domain_name = qname
     qname += '00'
 
     # QTYPE = 1 (A)
@@ -192,7 +163,36 @@ def createQuestion(args):
     # concatenate all the question fields
     question = qname + qtype + qclass
 
-    return question
+def parseResponse ():
+    print("***Answer Section ([num-answers] records)*** \n")
+    # Parse response from server
+    global answer
+    header = answer[0][0:4]
+    question = answer[0][12:]
+    answer = answer[0][12 + len(question):]
+    rcode = header[3:]
+    ancount = header[6:8]
+    nscount = header[8:10]
+    arcount = header[10:12]
+    
+    # Check if RCODE is 0
+    if rcode != '0000':
+        print('ERROR \t [RCODE is not 0]')
+        return
+    # Check if ANCOUNT is 0
+    elif ancount == '0000':
+        print('ERROR \t [ANCOUNT is 0]')
+        return
+    # Check if NSCOUNT is 0
+    elif nscount != '0000':
+        print('ERROR \t [NSCOUNT is not 0]')
+        return
+    # Check if ARCOUNT is 0
+    elif arcount != '0000':
+        print('ERROR \t [ARCOUNT is not 0]')
+        return
+    else:
+        print('Response received after [' + str(t_end - t_start) + '] seconds')
 
 # Program entry point
 if __name__ == "__main__":

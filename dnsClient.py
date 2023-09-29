@@ -58,13 +58,11 @@ def dnsClient (args):
         return
     else:
         print("Answer: " + str(answer) + '\n')
-        print(answer[0].hex())
-        hex_data = binascii.hexlify(answer[0])
-        hex_string = hex_data.decode('utf-8')
-        print(hex_string)
+        answer_hex = binascii.hexlify(answer[0]).decode('utf-8')
+        print(answer_hex)
         
         print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
-        parseResponse()
+        parseResponse(answer_hex)
     
 def parseInput ():
     # Parse user input
@@ -163,13 +161,12 @@ def createQuestion(args):
     # concatenate all the question fields
     question = qname + qtype + qclass
 
-def parseResponse ():
+def parseResponse (answer_hex):
     print("***Answer Section ([num-answers] records)*** \n")
     # Parse response from server
-    global answer
-    header = answer[0][0:4]
-    question = answer[0][12:]
-    answer = answer[0][12 + len(question):]
+    header = answer_hex[0:4]
+    question = answer_hex[0][12:]
+    answer_hex = answer_hex[0][12 + len(question):]
     rcode = header[3:]
     ancount = header[6:8]
     nscount = header[8:10]

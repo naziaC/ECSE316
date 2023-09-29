@@ -16,6 +16,7 @@ t_end = None
 
 def dnsClient (args):
     # Create UDP socket
+    global answer
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udpSocket.settimeout(args.timeout)
     t_start = time.time()
@@ -25,7 +26,7 @@ def dnsClient (args):
     for i in range(args.max_retries):
         print('Sending query to server...')
         try:
-            udpSocket.sendto(createQuery(args).encode('utf-8'), (args.server, args.port))
+            udpSocket.sendto(bytes.fromhex(createQuery(args)), (args.server[1:], args.port))
             # Receive response from server
             answer = udpSocket.recvfrom(1024)
             t_end = time.time()
@@ -34,15 +35,18 @@ def dnsClient (args):
             print('ERROR \t [Timeout event -  Resending query to server...]')
             n_retries = n_retries + 1
             continue
+        
+    
+    udpSocket.close()
 
     if answer == None or len(answer) == 0:
         print('ERROR \t [Maximum number of retries reached - Exiting program]')
         return
     else:
-        print('Response received after [' + (t_end - t_start) + '] seconds' + '([' + n_retries + '] retries)')
-
-    # [TODO: send query to server]
-    # udpSocket.sendto(createQuery(args).encode('utf-8'), (args.server, args.port))
+        #convert float to string for printing
+        print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
+        
+    
 
 def parseInput ():
     # Parse user input

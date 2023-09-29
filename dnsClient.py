@@ -162,34 +162,57 @@ def createQuestion(args):
     question = qname + qtype + qclass
 
 def parseResponse (answer_hex):
+    global header, question, query, qtype, t_start, t_end
     print("***Answer Section ([num-answers] records)*** \n")
-    # Parse response from server
-    header = answer_hex[0:4]
-    question = answer_hex[0][12:]
-    answer_hex = answer_hex[0][12 + len(question):]
-    rcode = header[3:]
-    ancount = header[6:8]
-    nscount = header[8:10]
-    arcount = header[10:12]
     
-    # Check if RCODE is 0
-    if rcode != '0000':
-        print('ERROR \t [RCODE is not 0]')
+    # get id from query header
+    query_id = header[0:4]
+    
+    # get id from answer header
+    answer_id = answer_hex[0:4]
+    
+    # check if id from query header matches id from answer header
+    if (query_id != answer_id):
+        print('ERROR \t [ID in response does not match ID in query]')
         return
-    # Check if ANCOUNT is 0
-    elif ancount == '0000':
-        print('ERROR \t [ANCOUNT is 0]')
-        return
-    # Check if NSCOUNT is 0
-    elif nscount != '0000':
-        print('ERROR \t [NSCOUNT is not 0]')
-        return
-    # Check if ARCOUNT is 0
-    elif arcount != '0000':
-        print('ERROR \t [ARCOUNT is not 0]')
-        return
-    else:
-        print('Response received after [' + str(t_end - t_start) + '] seconds')
+    
+    answer_header = answer_hex[0:24]
+    answer_question = answer_hex[24:len(question) + 24]
+    
+    print('Answer Header: ' + answer_header)
+    print('Query Header: ' + header)
+    print('Answer Question: ' + answer_question)
+    print('Query Question: ' + question)
+    
+    rcode = answer_header[7:8]
+    qdcount = answer_header[8:12]
+    ancount = answer_header[12:16]
+    nscount = answer_header[16:20]
+    arcount = answer_header[20:24]
+    
+    print ('RCODE: ' + rcode)
+    print ('QDCOUNT: ' + qdcount)
+    print ('ANCOUNT: ' + ancount)
+    print ('NSCOUNT: ' + nscount)
+    print ('ARCOUNT: ' + arcount)    
+    # # Check if RCODE is 0
+    # if rcode != '0000':
+    #     print('ERROR \t [RCODE is not 0]')
+    #     return
+    # # Check if ANCOUNT is 0
+    # elif ancount == '0000':
+    #     print('ERROR \t [ANCOUNT is 0]')
+    #     return
+    # # Check if NSCOUNT is 0
+    # elif nscount != '0000':
+    #     print('ERROR \t [NSCOUNT is not 0]')
+    #     return
+    # # Check if ARCOUNT is 0
+    # elif arcount != '0000':
+    #     print('ERROR \t [ARCOUNT is not 0]')
+    #     return
+    # else:
+    #     print('Response received after [' + str(t_end - t_start) + '] seconds')
 
 # Program entry point
 if __name__ == "__main__":

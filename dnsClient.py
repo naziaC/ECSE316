@@ -21,11 +21,23 @@ def dnsClient (args):
     udpSocket.settimeout(args.timeout)
     t_start = time.time()
     n_retries = 0
+    
+    print('DnsClient sending request for: ' + args.name + '\n')
+    print('Server: ' + args.server[1:] + '\n')
+    if (args.mx):
+        qtype = 'MX'
+    elif (args.ns):
+        qtype = 'NS'
+    else:
+        qtype = 'A'
+    print('Request type: ' + qtype + '\n')
+    
 
     # Send query to server for max number of retries
     for i in range(args.max_retries):
         print('Sending query to server...')
         try:
+            # Send query to server
             udpSocket.sendto(bytes.fromhex(createQuery(args)), (args.server[1:], args.port))
             # Receive response from server
             answer = udpSocket.recvfrom(1024)
@@ -36,18 +48,54 @@ def dnsClient (args):
             n_retries = n_retries + 1
             continue
         
-    
-    udpSocket.close()
+    # udpSocket.close()
 
     if answer == None or len(answer) == 0:
         print('ERROR \t [Maximum number of retries reached - Exiting program]')
         return
     else:
-        #convert float to string for printing
-        print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
+        print("Answer: " + str(answer) + '\n')
+        print(answer[0].hex())
+        hex_data = binascii.hexlify(answer[0])
+        hex_string = hex_data.decode('utf-8')
+        print(hex_string)
         
+        print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
+        parseResponse()
     
+def parseResponse ():
+    print("***Answer Section ([num-answers] records)*** \n")
+    # Parse response from server
+    global answer
+    header = answer[0][0:4]
+    question = answer[0][12:]
+    answer = answer[0][12 + len(question):]
+    rcode = header[3:]
+    ancount = header[6:8]
+    nscount = header[8:10]
+    arcount = header[10:12]
+    
+    # Check if RCODE is 0
+    if rcode != '0000':
+        print('ERROR \t [RCODE is not 0]')
+        return
+    # Check if ANCOUNT is 0
+    elif ancount == '0000':
+        print('ERROR \t [ANCOUNT is 0]')
+        return
+    # Check if NSCOUNT is 0
+    elif nscount != '0000':
+        print('ERROR \t [NSCOUNT is not 0]')
+        return
+    # Check if ARCOUNT is 0
+    elif arcount != '0000':
+        print('ERROR \t [ARCOUNT is not 0]')
+        return
+    else:
+        print('Response received after [' + str(t_end - t_start) + '] seconds')
+        
 
+    
 def parseInput ():
     # Parse user input
     parser = argparse.ArgumentParser(description="DNS Client Argument Parser")

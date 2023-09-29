@@ -10,13 +10,14 @@ import binascii
 import random
 import time
 
+query = None
 answer = None
 t_start = None
 t_end = None
 
 def dnsClient (args):
     # Create UDP socket
-    global answer
+    global answer, query
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udpSocket.settimeout(args.timeout)
     t_start = time.time()
@@ -38,7 +39,8 @@ def dnsClient (args):
         print('Sending query to server...')
         try:
             # Send query to server
-            udpSocket.sendto(bytes.fromhex(createQuery(args)), (args.server[1:], args.port))
+            createQuery(args)
+            udpSocket.sendto(bytes.fromhex(query), (args.server[1:], args.port))
             # Receive response from server
             answer = udpSocket.recvfrom(1024)
             t_end = time.time()
@@ -124,9 +126,11 @@ def parseInput ():
     return parser.parse_args()
     
 def createQuery(args):
+    global query
     header = createHeader()
     question = createQuestion(args)
-    return header + question
+    query = header + question
+    print('DNS Request Message: ' + query)
 
 def createHeader():
     # Create randomized 16-bit number for ID
@@ -162,7 +166,6 @@ def createHeader():
     # transform header from binary to hex
     header = hex(int(header, 2)).replace('0x', '').zfill(4)
 
-    print('header: ' + header)
     return header
 
 def createQuestion(args):
@@ -175,8 +178,6 @@ def createQuestion(args):
         for j in range(len(args_arr[i])):
             qname += str((hex(int(binascii.hexlify(args_arr[i][j].encode('utf-8')), 16)).replace('0x', '')).zfill(2))
     qname += '00'
-
-    print('qname: ' + qname)
 
     # QTYPE = 1 (A)
     if (args.mx):
@@ -191,7 +192,6 @@ def createQuestion(args):
     # concatenate all the question fields
     question = qname + qtype + qclass
 
-    print('question: ' + question)
     return question
 
 # Program entry point

@@ -194,25 +194,36 @@ def parseResponse (answer_hex):
     print ('QDCOUNT: ' + qdcount)
     print ('ANCOUNT: ' + ancount)
     print ('NSCOUNT: ' + nscount)
-    print ('ARCOUNT: ' + arcount)    
-    # # Check if RCODE is 0
-    # if rcode != '0000':
-    #     print('ERROR \t [RCODE is not 0]')
-    #     return
-    # # Check if ANCOUNT is 0
-    # elif ancount == '0000':
-    #     print('ERROR \t [ANCOUNT is 0]')
-    #     return
-    # # Check if NSCOUNT is 0
-    # elif nscount != '0000':
-    #     print('ERROR \t [NSCOUNT is not 0]')
-    #     return
-    # # Check if ARCOUNT is 0
-    # elif arcount != '0000':
-    #     print('ERROR \t [ARCOUNT is not 0]')
-    #     return
-    # else:
-    #     print('Response received after [' + str(t_end - t_start) + '] seconds')
+    print ('ARCOUNT: ' + arcount)  
+      
+    # Check if RCODE is 0
+    if rcode == '1':
+        print('ERROR \t [Format error: the name server was unable to interpret the query]')
+    elif rcode == '2':
+        print('ERROR \t [Server failure: the name server was unable to process this query due to a problem with the name server]')
+    elif rcode == '3':
+        print('NOTFOUND \t [Name error: meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist]')
+    elif rcode == '4':
+        print('ERROR \t [Not implemented: the name server does not support the requested kind of query]')
+    elif rcode == '5':
+        print('ERROR \t [Refused: the name server refuses to perform the requested operation for policy reasons]')
+    elif rcode != '0':
+        print('Unknown Error')
+    
+    # Check if ANCOUNT is 0
+    elif ancount == '0000':
+        print('ERROR \t [ANCOUNT is 0]')
+        return
+    # Check if NSCOUNT is 0
+    elif nscount != '0000':
+        print('ERROR \t [NSCOUNT is not 0]')
+        return
+    # Check if ARCOUNT is 0
+    elif arcount != '0000':
+        print('ERROR \t [ARCOUNT is not 0]')
+        return
+    else:
+        print('Response received after [' + str(t_end - t_start) + '] seconds')
 
 # Program entry point
 if __name__ == "__main__":

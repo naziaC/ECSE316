@@ -31,19 +31,18 @@ def dnsClient (args):
     t_start = time.time()
     n_retries = 0
     
-    print('DnsClient sending request for: ' + args.name + '\n')
-    print('Server: ' + args.server[1:] + '\n')
+    print('DnsClient sending request for: ' + args.name)
+    print('Server: ' + args.server[1:])
     if (args.mx):
         qtype_string = 'MX'
     elif (args.ns):
         qtype_string = 'NS'
     else:
         qtype_string = 'A'
-    print('Request type: ' + qtype_string + '\n')
+    print('Request type: ' + qtype_string)
     
     # Send query to server for max number of retries
     for i in range(args.max_retries):
-        print('Sending query to server...')
         try:
             # Send query to server
             createQuery(args)
@@ -61,9 +60,7 @@ def dnsClient (args):
         print('ERROR \t [Maximum number of retries reached - Exiting program]')
         return
     else:
-        print("Answer: " + str(response) + '\n')
         response = binascii.hexlify(response[0]).decode('utf-8')
-        print(response)
         
         print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
         parseResponse()
@@ -99,9 +96,7 @@ def createQuery(args):
     global header, question, query
     createHeader()
     createQuestion(args)
-
     query = header + question
-    print('DNS Request Message: ' + query)
 
 def createHeader():
     global header
@@ -182,12 +177,12 @@ def parseResponse ():
     response_answer_index = len(question) + 24
     response_answer = response[response_answer_index:]
     
-    print('Answer Header: ' + response_header)
-    print('Query Header: ' + header)
-    print('Answer Question: ' + response_question)
-    # TODO error checking to see if answer question and query question are the same
-    print('Query Question: ' + question)
-    print('Answer Record: ' + response_answer)
+    # print('Answer Header: ' + response_header)
+    # print('Query Header: ' + header)
+    # print('Answer Question: ' + response_question)
+    # # TODO error checking to see if answer question and query question are the same
+    # print('Query Question: ' + question)
+    # print('Answer Record: ' + response_answer)
     
     rcode = response_header[7:8]
     qdcount = response_header[8:12]
@@ -195,11 +190,11 @@ def parseResponse ():
     nscount = response_header[16:20]
     arcount = response_header[20:24]
     
-    print ('RCODE: ' + rcode)
-    print ('QDCOUNT: ' + qdcount)
-    print ('ANCOUNT: ' + ancount)
-    print ('NSCOUNT: ' + nscount)
-    print ('ARCOUNT: ' + arcount)  
+    # print ('RCODE: ' + rcode)
+    # print ('QDCOUNT: ' + qdcount)
+    # print ('ANCOUNT: ' + ancount)
+    # print ('NSCOUNT: ' + nscount)
+    # print ('ARCOUNT: ' + arcount)  
       
     # Check if RCODE is 0
     if rcode == '1':
@@ -228,12 +223,14 @@ def parseResponse ():
         print('ERROR \t [ARCOUNT is not 0]')
         return
     else:
-        print('Response received after [' + str(t_end - t_start) + '] seconds')
+        print('TODO')
 
     parseAnswer(response_answer, int(ancount, 16))
 
 def parseAnswer(response_answer, ancount):
         # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA
+        # TODO  AUTH  
+        
         for record in range(ancount):
             # Parse domain name from response
             name, end = parse_domain_name(response_answer_index)
@@ -253,28 +250,31 @@ def parseAnswer(response_answer, ancount):
             # if A type => convert to IP address (4 octects)
             if (response_type == '0001'):
                 rdata = str(int(rdata[0:2], 16)) + '.' + str(int(rdata[2:4], 16)) + '.' + str(int(rdata[4:6], 16)) + '.' + str(int(rdata[6:8], 16))
+                print('IP \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
             # if NS type => convert to qname
             elif (response_type == '0002'):
                 rdata, end = parse_domain_name(rdata_index)
+                print('NS \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
             # if CNAME type => name of alias
             elif (response_type == '0005'):
                 rdata, end = parse_domain_name(rdata_index)
-                print('TODO - CNAME type')
+                print('CNAME \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
             # if MX type => preference + exchange
             elif (response_type == '000f'):
                 rdata, end = parse_domain_name(rdata_index + 4)
+                print('MX \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
             else:
                 rdata = 'Unknown'
                 
 
-            # Print out record
-            print('Domain Name: ' + name)
-            print('end: ' + str(end))
-            print('Type: ' + response_type)
-            print('Class: ' + response_class)
-            print('TTL: ' + ttl)
-            print('RDLENGTH: ' + rdlength)
-            print('RDATA: ' + rdata)
+            # # Print out record
+            # print('Domain Name: ' + name)
+            # print('end: ' + str(end))
+            # print('Type: ' + response_type)
+            # print('Class: ' + response_class)
+            # print('TTL: ' + ttl)
+            # print('RDLENGTH: ' + rdlength)
+            # print('RDATA: ' + rdata)
    
 # Function to decode domain name from response and handle packet compression
 def parse_domain_name(offset): 

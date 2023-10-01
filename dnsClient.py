@@ -3,6 +3,9 @@
 ECSE 316 Assignment 1
 """
 
+# python3 dnsClient.py @132.206.85.18 www.mcgill.ca
+# python3 dnsClient.py -t 10 -r 2 -mx @8.8.8.8 mcgill.ca
+
 # Import libraries
 import argparse
 import socket

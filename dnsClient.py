@@ -15,13 +15,13 @@ domain_name = None
 question = None
 query = None
 qtype = None
-answer = None
+response = None
 t_start = None
 t_end = None
 
 def dnsClient (args):
     # Create UDP socket
-    global answer, query, qtype, t_start, t_end
+    global response, query, qtype, t_start, t_end
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udpSocket.settimeout(args.timeout)
     t_start = time.time()
@@ -45,7 +45,7 @@ def dnsClient (args):
             createQuery(args)
             udpSocket.sendto(bytes.fromhex(query), (args.server[1:], args.port))
             # Receive response from server
-            answer = udpSocket.recvfrom(1024)
+            response = udpSocket.recvfrom(1024)
             t_end = time.time()
             break
         except socket.timeout:
@@ -53,16 +53,16 @@ def dnsClient (args):
             n_retries = n_retries + 1
             continue
 
-    if answer == None or len(answer) == 0:
+    if response == None or len(response) == 0:
         print('ERROR \t [Maximum number of retries reached - Exiting program]')
         return
     else:
-        print("Answer: " + str(answer) + '\n')
-        answer_hex = binascii.hexlify(answer[0]).decode('utf-8')
-        print(answer_hex)
+        print("Answer: " + str(response) + '\n')
+        response_hex = binascii.hexlify(response[0]).decode('utf-8')
+        print(response_hex)
         
         print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
-        parseResponse(answer_hex)
+        parseResponse(response_hex)
     
 def parseInput ():
     # Parse user input
@@ -161,34 +161,34 @@ def createQuestion(args):
     # concatenate all the question fields
     question = qname + qtype + qclass
 
-def parseResponse (answer_hex):
+def parseResponse (response_hex):
     global header, question, query, qtype, t_start, t_end
     print("***Answer Section ([num-answers] records)*** \n")
     
-    # get id from query header
-    query_id = header[0:4]
-    
-    # get id from answer header
-    answer_id = answer_hex[0:4]
-    
     # check if id from query header matches id from answer header
-    if (query_id != answer_id):
+    query_id = header[0:4]
+    response_id = response_hex[0:4]
+
+    if (query_id != response_id):
         print('ERROR \t [ID in response does not match ID in query]')
         return
     
-    answer_header = answer_hex[0:24]
-    answer_question = answer_hex[24:len(question) + 24]
+    response_header = response_hex[0:24]
+    response_question = response_hex[24:len(question) + 24]
+    response_answer = response_hex[len(question) + 24:]
     
-    print('Answer Header: ' + answer_header)
+    print('Answer Header: ' + response_header)
     print('Query Header: ' + header)
-    print('Answer Question: ' + answer_question)
+    print('Answer Question: ' + response_question)
+    # TODO error checking to see if answer question and query question are the same
     print('Query Question: ' + question)
+    print('Answer Record: ' + response_answer)
     
-    rcode = answer_header[7:8]
-    qdcount = answer_header[8:12]
-    ancount = answer_header[12:16]
-    nscount = answer_header[16:20]
-    arcount = answer_header[20:24]
+    rcode = response_header[7:8]
+    qdcount = response_header[8:12]
+    ancount = response_header[12:16]
+    nscount = response_header[16:20]
+    arcount = response_header[20:24]
     
     print ('RCODE: ' + rcode)
     print ('QDCOUNT: ' + qdcount)
@@ -224,6 +224,59 @@ def parseResponse (answer_hex):
         return
     else:
         print('Response received after [' + str(t_end - t_start) + '] seconds')
+
+    
+    # name, end = parse_domain_name(answer_record, 24)
+    # q_type = answer_record[16: 20]
+    # qclass = answer_record[end + 4: end + 8]
+    # # Get TTL from answer record
+    # ttl = answer_record[end + 8: end + 16]
+    # # Get RDLENGTH from answer record
+    # rdlength = answer_record[end + 16: end + 20]
+    # # Get RDATA from answer record
+    # rdata = answer_record[end + 20: end + 20 + int(rdlength, 16) * 2]
+    
+    # print('Domain Name: ' + name)
+    # print('QTYPE: ' + str(q_type))
+    # print('QCLASS: ' + str(qclass))
+    
+    
+   
+# Function to decode domain name from response and handle packet compression
+# def parse_domain_name(record, start, size=0): 
+#     global answer
+#     name = ''
+#     end = start
+#     while True:
+#         # Get length of next label
+#         length = int(record[start:start + 2], 16)
+#         # If length is 0, then we have reached the end of the domain name
+#         if length == 0:
+#             break
+#         # If length is 192, then we have encountered a pointer
+#         elif length == 192:
+#             # Get the offset from the pointer
+#             offset = int(record[start + 2:start + 4], 16)
+#             # Get the domain name from the offset
+#             name += parse_domain_name(answer, offset * 2, size)[0]
+#             # Set the end of the domain name to the end of the pointer
+#             end = start + 4
+#             break
+#         # If length is not 0 or 192, then we have encountered a label
+#         else:
+#             # Get the label
+#             label = record[start + 2:start + 2 + length * 2]
+#             # Add the label to the domain name
+#             name += binascii.unhexlify(label).decode('utf-8') + '.'
+#             # Set the end of the domain name to the end of the label
+#             end = start + 2 + length * 2
+#             # Set the start of the next label to the end of the current label
+#             start = end
+#     # Remove the last period from the domain name
+#     name = name[:-1]
+#     # Return the domain name and the end of the domain name
+#     return name, end
+
 
 # Program entry point
 if __name__ == "__main__":

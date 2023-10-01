@@ -258,68 +258,55 @@ def parseAnswer(response_answer, ancount):
             #     print("TODO")
 
             # Get QTYPE from response
-            response_type = response[end: end + 16]
-            # Get QCLASS from response
-            response_class = response[end + 16: end + 32]
-            # Get TTL from response
-            ttl = response[end + 32: end + 64]
-            # Get RDLENGTH from response
-            rdlength = response[end + 64: end + 80]
-            # Get RDATA from response
-            rdata = response[end + 80: end + 80 + int(rdlength, 2) * 8]
+            # response_type = response[end: end + 16]
+            # # Get QCLASS from response
+            # response_class = response[end + 16: end + 32]
+            # # Get TTL from response
+            # ttl = response[end + 32: end + 64]
+            # # Get RDLENGTH from response
+            # rdlength = response[end + 64: end + 80]
+            # # Get RDATA from response
+            # rdata = response[end + 80: end + 80 + int(rdlength, 2) * 8]
 
             # Print out record
             print('Domain Name: ' + name)
-            print('QTYPE: ' + str(response_type))
-            print('QCLASS: ' + str(response_class))
-            print('TTL: ' + str(int(ttl, 2)))
-            print('RDLENGTH: ' + str(int(rdlength, 2)))
-            print('RDATA: ' + str(int(rdata, 2)))
-            print('\n')
-            print('Record ' + record + ' done!!')
+            # print('QTYPE: ' + str(response_type))
+            # print('QCLASS: ' + str(response_class))
+            # print('TTL: ' + str(int(ttl, 2)))
+            # print('RDLENGTH: ' + str(int(rdlength, 2)))
+            # print('RDATA: ' + str(int(rdata, 2)))
+            # print('\n')
+            # print('Record ' + record + ' done!!')
    
 # Function to decode domain name from response and handle packet compression
 def parse_domain_name(offset): 
-    # resonse in hex
-    # offset in octets
     global response
     start = offset
     name = ''
-
-    print('Response: ' + response)
-    print('Start ' + response[start:start + 2])
     
     while response[start:start + 2] != '00':
-        # Check if pointer
-        print('Check pointer ' + response[start:start + 1])
-        # convert hex to binary than take first two bits
-        # if first two bits are 11, then it is a pointer
-        
         # convert response to binary
-        pointer = str(bin(int(response[start:start + 4], 16)).replace('0b', '').zfill(len(response) * 4))
+        pointer = str(bin(int(response[start:start + 4], 16)).replace('0b', '').zfill(16))
         # take first two bits
         pointer_header = pointer[0:2]
         # check if pointer
         if pointer_header == '11':
             # Get offset from pointer in octets
             offset = int(pointer[2:], 2)
-            # Get domain name from offset
             name += parse_domain_name(offset * 2)[0]
-            # # Set end of domain name to end of pointer
-            start = start + 4
+            start += 4
             break
+        else:
+            for i in range(int(response[start:start + 2], 16)):
+                name += chr(int(response[start + (i + 1) * 2:start + (i + 2) * 2], 16))
+            name += '.'
+            start += (int(response[start:start + 2], 16) + 1) * 2
         
-        print (response[start:start + 2])
-        # if not pointer, convert hex to ascii
-        for i in range(int(response[start:start + 2], 16)):
-            name += binascii.unhexlify(response[start + (i + 1):start + 2 + (i + 1)]).decode('utf-8')
-        name += '.'
-        start += int(response[start:start + 2], 16) + 2
-
+    if name.endswith('.'):
+        name = name[:-1]
+            
     end = start + 2
-
     return name, end
-
 
 # Program entry point
 if __name__ == "__main__":

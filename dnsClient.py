@@ -234,7 +234,6 @@ def parseResponse ():
 
 def parseAnswer(response_answer, ancount):
         # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA
-        
         for record in range(ancount):
             # Parse domain name from response
             name, end = parse_domain_name(response_answer_index)
@@ -248,7 +247,25 @@ def parseAnswer(response_answer, ancount):
             # Get RDLENGTH from response
             rdlength = response[end + 16: end + 20]
             # Get RDATA from response
-            rdata = response[end + 20: end + 20 + int(rdlength, 16) * 2]
+            rdata_index = end + 20
+            rdata = response[rdata_index: rdata_index + int(rdlength, 16) * 2]
+            
+            # if A type => convert to IP address (4 octects)
+            if (response_type == '0001'):
+                rdata = str(int(rdata[0:2], 16)) + '.' + str(int(rdata[2:4], 16)) + '.' + str(int(rdata[4:6], 16)) + '.' + str(int(rdata[6:8], 16))
+            # if NS type => convert to qname
+            elif (response_type == '0002'):
+                rdata, end = parse_domain_name(rdata_index)
+            # if CNAME type => name of alias
+            elif (response_type == '0005'):
+                rdata, end = parse_domain_name(rdata_index)
+                print('TODO - CNAME type')
+            # if MX type => preference + exchange
+            elif (response_type == '000f'):
+                rdata, end = parse_domain_name(rdata_index + 4)
+            else:
+                rdata = 'Unknown'
+                
 
             # Print out record
             print('Domain Name: ' + name)

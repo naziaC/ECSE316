@@ -234,49 +234,30 @@ def parseResponse ():
 
 def parseAnswer(response_answer, ancount):
         # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA
-        # Convert hex to binary
-        # response_answer = str(bin(int(response_answer, 16)).replace('0b', '').zfill(len(response_answer) * 4))
-
+        
         for record in range(ancount):
             # Parse domain name from response
             name, end = parse_domain_name(response_answer_index)
-            
-            # # See if name is compressed
-            # if response_answer[0:2] == '11':
-            #     # Get offset from pointer in octets
-            #     offset = int(response_answer[2:16], 2)
-            #     # Get domain name from offset
-            #     name = parse_domain_name(response_answer, offset)[0]
-            #     # Set end of domain name to end of pointer
-            #     end = 16
-
-            # # If name is not compressed
-            # else:
-            #     # Get domain name from response
-            #     # name, end = parse_domain_name(response_answer, 0, len(response_answer))
-            #     # TODO: check if this is correct
-            #     print("TODO")
 
             # Get QTYPE from response
-            # response_type = response[end: end + 16]
-            # # Get QCLASS from response
-            # response_class = response[end + 16: end + 32]
-            # # Get TTL from response
-            # ttl = response[end + 32: end + 64]
-            # # Get RDLENGTH from response
-            # rdlength = response[end + 64: end + 80]
-            # # Get RDATA from response
-            # rdata = response[end + 80: end + 80 + int(rdlength, 2) * 8]
+            response_type = response[end: end + 4]
+            # Get QCLASS from response
+            response_class = response[end + 4: end + 8]
+            # Get TTL from response
+            ttl = response[end + 8: end + 16]
+            # Get RDLENGTH from response
+            rdlength = response[end + 16: end + 20]
+            # Get RDATA from response
+            rdata = response[end + 20: end + 20 + int(rdlength, 16) * 2]
 
             # Print out record
             print('Domain Name: ' + name)
-            # print('QTYPE: ' + str(response_type))
-            # print('QCLASS: ' + str(response_class))
-            # print('TTL: ' + str(int(ttl, 2)))
-            # print('RDLENGTH: ' + str(int(rdlength, 2)))
-            # print('RDATA: ' + str(int(rdata, 2)))
-            # print('\n')
-            # print('Record ' + record + ' done!!')
+            print('end: ' + str(end))
+            print('Type: ' + response_type)
+            print('Class: ' + response_class)
+            print('TTL: ' + ttl)
+            print('RDLENGTH: ' + rdlength)
+            print('RDATA: ' + rdata)
    
 # Function to decode domain name from response and handle packet compression
 def parse_domain_name(offset): 
@@ -298,15 +279,14 @@ def parse_domain_name(offset):
             break
         else:
             for i in range(int(response[start:start + 2], 16)):
-                name += chr(int(response[start + (i + 1) * 2:start + (i + 2) * 2], 16))
+                name += binascii.unhexlify(response[start + (i + 1) * 2:start + (i + 2) * 2]).decode('utf-8')
             name += '.'
             start += (int(response[start:start + 2], 16) + 1) * 2
         
     if name.endswith('.'):
         name = name[:-1]
             
-    end = start + 2
-    return name, end
+    return name, start
 
 # Program entry point
 if __name__ == "__main__":

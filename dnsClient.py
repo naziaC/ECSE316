@@ -4,8 +4,15 @@ ECSE 316 Assignment 1
 """
 
 # Example queries:
+
+# Answer Record test - McGill Server
 # python3 dnsClient.py @132.206.85.18 www.mcgill.ca
+
+# Answer Record test
 # python3 dnsClient.py -t 10 -r 2 -mx @8.8.8.8 mcgill.ca
+
+# Additional Record test - McGill Server
+# python3 dnsClient.py -t 10 -r 2 -mx @132.206.85.18 mcgill.ca
 
 # Import libraries
 import argparse
@@ -14,7 +21,7 @@ import binascii
 import random
 import time
 
-header, domain_name, question, query, qtype, response, t_start, t_end, response_answer_index = None, None, None, None, None, None, None, None, None 
+header, domain_name, question, query, qtype, response, t_start, t_end = None, None, None, None, None, None, None, None 
 
 def dnsClient (args):
     # Create UDP socket
@@ -45,15 +52,15 @@ def dnsClient (args):
             t_end = time.time()
             break
         except socket.timeout:
-            print('ERROR \t [Timeout event -  Resending query to server...]')
+            print('ERROR \t Timeout event -  Resending query to server...')
             n_retries = n_retries + 1
             continue
         except Exception as e:
-            print(f'ERROR \t [Error: {e} - Exiting program]')
+            print(f'ERROR \t Incorrect input syntax: {e} - Exiting program')
             exit()
 
     if response == None or len(response) == 0:
-        print('ERROR \t [Maximum number of retries reached - Exiting program]')
+        print(f'ERROR \t Maximum number of retries {str(args.max_retries)} exceeded - Exiting program')
         return
     else:
         response = binascii.hexlify(response[0]).decode('utf-8')
@@ -156,26 +163,25 @@ def createQuestion(args):
     question = qname + qtype + qclass
 
 def parseResponse ():
-    global header, question, query, qtype, t_start, t_end, response, response_answer_index
+    global header, question, query, qtype, t_start, t_end, response
     
     # check if id from query header matches id from answer header
     query_id = header[0:4]
     response_id = response[0:4]
 
     if (query_id != response_id):
-        print('ERROR \t [ID in response does not match ID in query]')
+        print('ERROR \t Unexpected response: ID in response does not match ID in query')
         return
     
     response_header = response[0:24]
     response_question = response[24:len(question) + 24]
-    response_answer_index = len(question) + 24
-    response_answer = response[response_answer_index:]
+    response_record_index = len(question) + 24
+    response_answer = response[response_record_index:]
     
     # Checking to see if answer question and query question are the same
     if (response_question != question):
-        print('ERROR \t [Question in response does not match question in query]')
+        print('ERROR \t Unexpected response: Question in response does not match question in query')
         return 
-    
     
     # print('Answer Header: ' + response_header)
     # print('Query Header: ' + header)
@@ -199,39 +205,41 @@ def parseResponse ():
     # print ('ANCOUNT: ' + ancount)
     # print ('NSCOUNT: ' + nscount)
     # print ('ARCOUNT: ' + arcount)
-      
+    
     # Check if RCODE is 0
     if rcode == '1':
-        print('ERROR \t [Format error: the name server was unable to interpret the query]')
+        print('ERROR \t Format error: the name server was unable to interpret the query')
         exit()
     elif rcode == '2':
-        print('ERROR \t [Server failure: the name server was unable to process this query due to a problem with the name server]')
+        print('ERROR \t Server failure: the name server was unable to process this query due to a problem with the name server')
         exit()
     elif rcode == '3' and aa == 1:
-        print('NOTFOUND \t [Name error: meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist]')
+        print('NOTFOUND \t Name error: meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist')
         exit()
     elif rcode == '4':
-        print('ERROR \t [Not implemented: the name server does not support the requested kind of query]')
+        print('ERROR \t Not implemented: the name server does not support the requested kind of query')
         exit()
     elif rcode == '5':
-        print('ERROR \t [Refused: the name server refuses to perform the requested operation for policy reasons]')
+        print('ERROR \t Refused: the name server refuses to perform the requested operation for policy reasons')
         exit()
     elif rcode != '0' and rcode != '3':
-        print('ERROR \t Unknown Error')
+        print('ERROR \t Unexpected response: rcode value not in range [0,5]')
         exit()
     
     if (int(ancount, 16) > 0): 
-        print("***Answer Section ((" + str(int(ancount, 16)) + " records)***")
-        parseAnswer(int(ancount, 16), response_answer_index, aa)
+        print("***Answer Section (" + str(int(ancount, 16)) + " records)***")
+        response_record_index = parseAnswer(int(ancount, 16), response_record_index, aa, True)
     else:
         print("NOTFOUND")
+
+    if (int(nscount, 16) > 0):
+        response_record_index = parseAnswer(int(nscount, 16), response_record_index, aa, False)
     
     if (int(arcount, 16) > 0): 
-        print("***Additional Section (" + str(int(arcount, 16)) + "records)***")
-        response_additional_index = response_answer_index + int(ancount, 16) * 2 + int(nscount, 16) * 2
-        parseAnswer(int(arcount, 16), response_additional_index, aa)
+        print("***Additional Section (" + str(int(arcount, 16)) + " records)***")
+        parseAnswer(int(arcount, 16), response_record_index, aa, True)
         
-def parseAnswer(count, index, aa):
+def parseAnswer(count, index, aa, if_print):
     # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA
     auth_status = 'auth' if aa else 'nonauth'
         
@@ -244,34 +252,38 @@ def parseAnswer(count, index, aa):
         # Get QCLASS from response
         response_class = response[end + 4: end + 8]
         # Get TTL from response
-        ttl = response[end + 8: end + 16]
+        ttl = str(int(response[end + 8: end + 16], 16))
         # Get RDLENGTH from response
         rdlength = response[end + 16: end + 20]
         # Get RDATA from response
         rdata_index = end + 20
-        rdata = response[rdata_index: rdata_index + int(rdlength, 16) * 2]
             
-        # if A type => convert to IP address (4 octects)
-        if (response_type == '0001'):
-            rdata = str(int(rdata[0:2], 16)) + '.' + str(int(rdata[2:4], 16)) + '.' + str(int(rdata[4:6], 16)) + '.' + str(int(rdata[6:8], 16))
-            print('IP \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
-        # if NS type => convert to qname
-        elif (response_type == '0002'):
-            rdata, end = parse_domain_name(rdata_index)
-            print('NS \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
-        # if CNAME type => name of alias
-        elif (response_type == '0005'):
-            rdata, end = parse_domain_name(rdata_index)
-            print('CNAME \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
-        # if MX type => preference + exchange
-        elif (response_type == '000f'):
-            rdata, end = parse_domain_name(rdata_index + 4)
-            print('MX \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
-        else:
-            rdata = 'Unknown'
+        if (if_print):
+            # if A type => convert to IP address (4 octects)
+            if (response_type == '0001'):
+                rdata = response[rdata_index: rdata_index + int(rdlength, 16) * 2]
+                rdata = str(int(rdata[0:2], 16)) + '.' + str(int(rdata[2:4], 16)) + '.' + str(int(rdata[4:6], 16)) + '.' + str(int(rdata[6:8], 16))
+                print('IP \t ' + rdata + ' \t ' + ttl + ' \t ' + auth_status)
+            # if NS type => convert to qname
+            elif (response_type == '0002'):
+                rdata, end = parse_domain_name(rdata_index)
+                print('NS \t ' + rdata + ' \t ' + ttl + ' \t ' + auth_status)
+            # if CNAME type => name of alias
+            elif (response_type == '0005'):
+                rdata, end = parse_domain_name(rdata_index)
+                print('CNAME \t ' + rdata + ' \t ' + ttl + ' \t ' + auth_status)
+            # if MX type => preference + exchange
+            elif (response_type == '000f'):
+                preference = str(int(response[rdata_index: rdata_index + 4], 16))
+                rdata, end = parse_domain_name(rdata_index + 4)
+                print('MX \t ' + rdata + ' \t ' + preference + ' \t ' + ttl + ' \t ' + auth_status)
+            else:
+                rdata = 'Unknown'
 
         # increment index to next record
         index = rdata_index + int(rdlength, 16) * 2
+    
+    return index
                 
    
 # Function to decode domain name from response and handle packet compression

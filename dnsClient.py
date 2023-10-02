@@ -198,16 +198,22 @@ def parseResponse ():
     # Check if RCODE is 0
     if rcode == '1':
         print('ERROR \t [Format error: the name server was unable to interpret the query]')
+        exit()
     elif rcode == '2':
         print('ERROR \t [Server failure: the name server was unable to process this query due to a problem with the name server]')
+        exit()
     elif rcode == '3':
         print('NOTFOUND \t [Name error: meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist]')
+        exit()
     elif rcode == '4':
         print('ERROR \t [Not implemented: the name server does not support the requested kind of query]')
+        exit()
     elif rcode == '5':
         print('ERROR \t [Refused: the name server refuses to perform the requested operation for policy reasons]')
+        exit()
     elif rcode != '0':
         print('Unknown Error')
+        exit()
     
     # Check if ANCOUNT is 0
     elif ancount == '0000':

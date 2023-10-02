@@ -13,15 +13,7 @@ import binascii
 import random
 import time
 
-header = None
-domain_name = None
-question = None
-query = None
-qtype = None
-response = None
-t_start = None
-t_end = None
-response_answer_index = None
+header, domain_name, question, query, qtype, response, t_start, t_end, response_answer_index = None, None, None, None, None, None, None, None, None 
 
 def dnsClient (args):
     # Create UDP socket
@@ -62,7 +54,7 @@ def dnsClient (args):
     else:
         response = binascii.hexlify(response[0]).decode('utf-8')
         
-        print('Response received after [' + str(t_end - t_start) + '] seconds' + '([' + str(n_retries) + '] retries)')
+        print('Response received after ' + str(t_end - t_start) + ' seconds ' + '(' + str(n_retries) + ' retries)')
         parseResponse()
     
 def parseInput ():
@@ -136,7 +128,7 @@ def createHeader():
 
 def createQuestion(args):
     global domain_name, qtype, query, question
-    # QNAME = domain name [TODO: check if this is correct]
+    # QNAME = domain name
     args_arr = args.name.split('.')
     qname = ''
     for i in range(len(args_arr)):
@@ -176,10 +168,15 @@ def parseResponse ():
     response_answer_index = len(question) + 24
     response_answer = response[response_answer_index:]
     
+    # Checking to see if answer question and query question are the same
+    if (response_question != question):
+        print('ERROR \t [Question in response does not match question in query]')
+        return 
+    
+    
     # print('Answer Header: ' + response_header)
     # print('Query Header: ' + header)
     # print('Answer Question: ' + response_question)
-    # # TODO error checking to see if answer question and query question are the same
     # print('Query Question: ' + question)
     # print('Answer Record: ' + response_answer)
     
@@ -220,21 +217,6 @@ def parseResponse ():
         print('Unknown Error')
         exit()
     
-    # Check if ANCOUNT is 0
-    elif ancount == '0000':
-        print('ERROR \t [ANCOUNT is 0]')
-        return
-    # Check if NSCOUNT is 0
-    elif nscount != '0000':
-        print('ERROR \t [NSCOUNT is not 0]')
-        return
-    # Check if ARCOUNT is 0
-    elif arcount != '0000':
-        print('ERROR \t [ARCOUNT is not 0]')
-        return
-    else:
-        print('TODO')
-
     if (int(ancount, 16) > 0): 
         print("***Answer Section ((" + str(int(ancount, 16)) + " records)***")
         parseAnswer(int(ancount, 16), response_answer_index, aa)
@@ -268,19 +250,19 @@ def parseAnswer(count, index, aa):
         # if A type => convert to IP address (4 octects)
         if (response_type == '0001'):
             rdata = str(int(rdata[0:2], 16)) + '.' + str(int(rdata[2:4], 16)) + '.' + str(int(rdata[4:6], 16)) + '.' + str(int(rdata[6:8], 16))
-            print('IP \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
+            print('IP \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
         # if NS type => convert to qname
         elif (response_type == '0002'):
             rdata, end = parse_domain_name(rdata_index)
-            print('NS \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
+            print('NS \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
         # if CNAME type => name of alias
         elif (response_type == '0005'):
             rdata, end = parse_domain_name(rdata_index)
-            print('CNAME \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
+            print('CNAME \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
         # if MX type => preference + exchange
         elif (response_type == '000f'):
             rdata, end = parse_domain_name(rdata_index + 4)
-            print('MX \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
+            print('MX \t ' + rdata + ' \t ' + ttl + ' \t' + auth_status)
         else:
             rdata = 'Unknown'
 

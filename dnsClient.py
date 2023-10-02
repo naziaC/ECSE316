@@ -162,7 +162,6 @@ def createQuestion(args):
 
 def parseResponse ():
     global header, question, query, qtype, t_start, t_end, response, response_answer_index
-    print("***Answer Section ([num-answers] records)*** \n")
     
     # check if id from query header matches id from answer header
     query_id = header[0:4]
@@ -225,15 +224,24 @@ def parseResponse ():
     else:
         print('TODO')
 
-    parseAnswer(response_answer, int(ancount, 16))
-
-def parseAnswer(response_answer, ancount):
+    if (int(ancount, 16) > 0): 
+        print("***Answer Section ((" + str(int(ancount, 16)) + " records)***") # TODO num-answers
+        parseAnswer(int(ancount, 16), response_answer_index)
+    
+    if (int(arcount, 16) > 0): 
+        print("***Additional Section (" + str(int(arcount, 16)) + "records)***") # TODO num-answers
+        parseAnswer(int(arcount, 16))
+        
+    if (int(ancount, 16) == 0 and int(arcount, 16) == 0):
+        print("NOTFOUND")
+        
+def parseAnswer(count, index):
         # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA
         # TODO  AUTH  
         
-        for record in range(ancount):
+        for record in range(count):
             # Parse domain name from response
-            name, end = parse_domain_name(response_answer_index)
+            name, end = parse_domain_name(index)
 
             # Get QTYPE from response
             response_type = response[end: end + 4]
@@ -266,15 +274,6 @@ def parseAnswer(response_answer, ancount):
             else:
                 rdata = 'Unknown'
                 
-
-            # # Print out record
-            # print('Domain Name: ' + name)
-            # print('end: ' + str(end))
-            # print('Type: ' + response_type)
-            # print('Class: ' + response_class)
-            # print('TTL: ' + ttl)
-            # print('RDLENGTH: ' + rdlength)
-            # print('RDATA: ' + rdata)
    
 # Function to decode domain name from response and handle packet compression
 def parse_domain_name(offset): 

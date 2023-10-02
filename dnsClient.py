@@ -23,7 +23,7 @@ import time
 
 header, domain_name, question, query, qtype, response, t_start, t_end = None, None, None, None, None, None, None, None 
 
-def dnsClient (args):
+def dnsClient(args):
     # Create UDP socket
     global response, query, qtype, t_start, t_end
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -67,7 +67,7 @@ def dnsClient (args):
         print('Response received after ' + str(t_end - t_start) + ' seconds ' + '(' + str(n_retries) + ' retries)')
         parseResponse()
     
-def parseInput ():
+def parseInput():
     # Parse user input
     parser = argparse.ArgumentParser(description="DNS Client Argument Parser")
     
@@ -162,7 +162,7 @@ def createQuestion(args):
     # concatenate all the question fields
     question = qname + qtype + qclass
 
-def parseResponse ():
+def parseResponse():
     global header, question, query, qtype, t_start, t_end, response
     
     # check if id from query header matches id from answer header
@@ -228,24 +228,24 @@ def parseResponse ():
     
     if (int(ancount, 16) > 0): 
         print("***Answer Section (" + str(int(ancount, 16)) + " records)***")
-        response_record_index = parseAnswer(int(ancount, 16), response_record_index, aa, True)
+        response_record_index = parseRecord(int(ancount, 16), response_record_index, aa, True)
     else:
         print("NOTFOUND")
 
     if (int(nscount, 16) > 0):
-        response_record_index = parseAnswer(int(nscount, 16), response_record_index, aa, False)
+        response_record_index = parseRecord(int(nscount, 16), response_record_index, aa, False)
     
     if (int(arcount, 16) > 0): 
         print("***Additional Section (" + str(int(arcount, 16)) + " records)***")
-        parseAnswer(int(arcount, 16), response_record_index, aa, True)
+        parseRecord(int(arcount, 16), response_record_index, aa, True)
         
-def parseAnswer(count, index, aa, if_print):
+def parseRecord(count, index, aa, if_print):
     # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA
     auth_status = 'auth' if aa else 'nonauth'
         
     for record in range(count):
         # Parse domain name from response
-        name, end = parse_domain_name(index)
+        name, end = parseDomainName(index)
 
         # Get QTYPE from response
         response_type = response[end: end + 4]
@@ -266,16 +266,16 @@ def parseAnswer(count, index, aa, if_print):
                 print('IP \t ' + rdata + ' \t ' + ttl + ' \t ' + auth_status)
             # if NS type => convert to qname
             elif (response_type == '0002'):
-                rdata, end = parse_domain_name(rdata_index)
+                rdata, end = parseDomainName(rdata_index)
                 print('NS \t ' + rdata + ' \t ' + ttl + ' \t ' + auth_status)
             # if CNAME type => name of alias
             elif (response_type == '0005'):
-                rdata, end = parse_domain_name(rdata_index)
+                rdata, end = parseDomainName(rdata_index)
                 print('CNAME \t ' + rdata + ' \t ' + ttl + ' \t ' + auth_status)
             # if MX type => preference + exchange
             elif (response_type == '000f'):
                 preference = str(int(response[rdata_index: rdata_index + 4], 16))
-                rdata, end = parse_domain_name(rdata_index + 4)
+                rdata, end = parseDomainName(rdata_index + 4)
                 print('MX \t ' + rdata + ' \t ' + preference + ' \t ' + ttl + ' \t ' + auth_status)
             else:
                 rdata = 'Unknown'
@@ -287,7 +287,7 @@ def parseAnswer(count, index, aa, if_print):
                 
    
 # Function to decode domain name from response and handle packet compression
-def parse_domain_name(offset): 
+def parseDomainName(offset): 
     global response
     start = offset
     name = ''
@@ -301,7 +301,7 @@ def parse_domain_name(offset):
         if pointer_header == '11':
             # Get offset from pointer in octets
             offset = int(pointer[2:], 2)
-            name += parse_domain_name(offset * 2)[0]
+            name += parseDomainName(offset * 2)[0]
             start += 4
             break
         else:

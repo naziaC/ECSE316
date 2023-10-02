@@ -204,7 +204,7 @@ def parseResponse ():
     elif rcode == '2':
         print('ERROR \t [Server failure: the name server was unable to process this query due to a problem with the name server]')
         exit()
-    elif rcode == '3':
+    elif rcode == '3' and aa == 1:
         print('NOTFOUND \t [Name error: meaningful only for responses from an authoritative name server, this code signifies that the domain name referenced in the query does not exist]')
         exit()
     elif rcode == '4':
@@ -213,8 +213,8 @@ def parseResponse ():
     elif rcode == '5':
         print('ERROR \t [Refused: the name server refuses to perform the requested operation for policy reasons]')
         exit()
-    elif rcode != '0':
-        print('Unknown Error')
+    elif rcode != '0' and rcode != '3':
+        print('ERROR \t Unknown Error')
         exit()
     
     if (int(ancount, 16) > 0): 

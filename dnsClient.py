@@ -183,17 +183,22 @@ def parseResponse ():
     # print('Query Question: ' + question)
     # print('Answer Record: ' + response_answer)
     
+    # convert qr & aa from hex to binary
+    qr = str(bin(int(response_header[4:5], 16)).replace('0b', '').zfill(4))[0:1]
+    aa = int(str(bin(int(response_header[5:6], 16)).replace('0b', '').zfill(4))[1:2], 2)
     rcode = response_header[7:8]
     qdcount = response_header[8:12]
     ancount = response_header[12:16]
     nscount = response_header[16:20]
     arcount = response_header[20:24]
     
+    # print ('QR: ' + qr)
+    # print ('AA: ' + str(aa))
     # print ('RCODE: ' + rcode)
     # print ('QDCOUNT: ' + qdcount)
     # print ('ANCOUNT: ' + ancount)
     # print ('NSCOUNT: ' + nscount)
-    # print ('ARCOUNT: ' + arcount)  
+    # print ('ARCOUNT: ' + arcount)
       
     # Check if RCODE is 0
     if rcode == '1':
@@ -231,18 +236,18 @@ def parseResponse ():
         print('TODO')
 
     if (int(ancount, 16) > 0): 
-        print("***Answer Section ((" + str(int(ancount, 16)) + " records)***") # TODO num-answers
-        parseAnswer(int(ancount, 16), response_answer_index)
+        print("***Answer Section ((" + str(int(ancount, 16)) + " records)***")
+        parseAnswer(int(ancount, 16), response_answer_index, aa)
     else:
         print("NOTFOUND")
     
     if (int(arcount, 16) > 0): 
-        print("***Additional Section (" + str(int(arcount, 16)) + "records)***") # TODO num-answers
-        parseAnswer(int(arcount, 16))
+        print("***Additional Section (" + str(int(arcount, 16)) + "records)***")
+        parseAnswer(int(arcount, 16), response_answer_index, aa)
         
-def parseAnswer(count, index):
+def parseAnswer(count, index, aa):
     # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA
-    # TODO  AUTH  
+    auth_status = 'auth' if aa else 'nonauth'
         
     for record in range(count):
         # Parse domain name from response
@@ -263,21 +268,24 @@ def parseAnswer(count, index):
         # if A type => convert to IP address (4 octects)
         if (response_type == '0001'):
             rdata = str(int(rdata[0:2], 16)) + '.' + str(int(rdata[2:4], 16)) + '.' + str(int(rdata[4:6], 16)) + '.' + str(int(rdata[6:8], 16))
-            print('IP \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
+            print('IP \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
         # if NS type => convert to qname
         elif (response_type == '0002'):
             rdata, end = parse_domain_name(rdata_index)
-            print('NS \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
+            print('NS \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
         # if CNAME type => name of alias
         elif (response_type == '0005'):
             rdata, end = parse_domain_name(rdata_index)
-            print('CNAME \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
+            print('CNAME \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
         # if MX type => preference + exchange
         elif (response_type == '000f'):
             rdata, end = parse_domain_name(rdata_index + 4)
-            print('MX \t [' + rdata + '] \t [' + ttl + '] \t [AUTH TODO]')
+            print('MX \t [' + rdata + '] \t [' + ttl + '] \t' + auth_status)
         else:
             rdata = 'Unknown'
+
+        # increment index to next record
+        index = rdata_index + int(rdlength, 16) * 2
                 
    
 # Function to decode domain name from response and handle packet compression

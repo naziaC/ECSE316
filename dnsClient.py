@@ -3,6 +3,7 @@
 ECSE 316 Assignment 1
 """
 
+# Example queries:
 # python3 dnsClient.py @132.206.85.18 www.mcgill.ca
 # python3 dnsClient.py -t 10 -r 2 -mx @8.8.8.8 mcgill.ca
 
@@ -23,7 +24,7 @@ def dnsClient (args):
     t_start = time.time()
     n_retries = 0
     
-    print('DnsClient sending request for: ' + args.name)
+    print('DnsClient sending request for ' + args.name)
     print('Server: ' + args.server[1:])
     if (args.mx):
         qtype_string = 'MX'
@@ -47,13 +48,15 @@ def dnsClient (args):
             print('ERROR \t [Timeout event -  Resending query to server...]')
             n_retries = n_retries + 1
             continue
+        except Exception as e:
+            print(f'ERROR \t [Error: {e} - Exiting program]')
+            exit()
 
     if response == None or len(response) == 0:
         print('ERROR \t [Maximum number of retries reached - Exiting program]')
         return
     else:
         response = binascii.hexlify(response[0]).decode('utf-8')
-        
         print('Response received after ' + str(t_end - t_start) + ' seconds ' + '(' + str(n_retries) + ' retries)')
         parseResponse()
     
@@ -225,7 +228,8 @@ def parseResponse ():
     
     if (int(arcount, 16) > 0): 
         print("***Additional Section (" + str(int(arcount, 16)) + "records)***")
-        parseAnswer(int(arcount, 16), response_answer_index, aa)
+        response_additional_index = response_answer_index + int(ancount, 16) * 2 + int(nscount, 16) * 2
+        parseAnswer(int(arcount, 16), response_additional_index, aa)
         
 def parseAnswer(count, index, aa):
     # Each record format: NAME, TYPE, CLASS, TTL, RDLENGTH, RDATA

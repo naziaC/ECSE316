@@ -10,36 +10,9 @@ import matplotlib.pyplot as pyplot
 import numpy as np
 import argparse
 
-def main(args):
-    arr = image.imread(args.image)
-    
-    if (args.mode == 1):
-        fastmode(arr)
-    elif (args.mode == 2):
-        denoise(arr)
-    elif (args.mode == 3):
-        compress(arr)
-    elif (args.mode == 4):
-        runtime(arr)
-    else:
-        fastmode(args)
-     
-def parseInput():
-    # Parse user input
-    parser = argparse.ArgumentParser(description="FFT Argument Parser")
-    
-    parser.add_argument('-m', '--mode', type=int, default=1, help="""
-        [1] (Default) for fast mode where the image is converted into its FFT form and displayed;
-        [2] for denoising where the image is denoised by applying an FFT, truncating high;
-        frequencies and then displayed; 
-        [3] for compressing and plot the image;
-        [4] for plotting the runtime graphs for the report
-        """) 
-    parser.add_argument('-i', '--image', type=str, default="moonlanding.png", help="""
-        Filename of the image we wish to take the DFT of
-        """)
-    
-    return parser.parse_args()
+##################################################
+#          Fourier Transform Functions           #
+##################################################
 
 def naive1DFourierTransform(array):
     # For 1d Array
@@ -157,11 +130,43 @@ def inverseFast2DFourierTransform(array):
     
     return fourierArray
 
+##################################################
+#                  Processing                    #
+##################################################
 
+def main(args):
+    arr = image.imread(args.image)
+    
+    if (args.mode == 1):
+        fastmode(arr)
+    elif (args.mode == 2):
+        denoise(arr)
+    elif (args.mode == 3):
+        compress(arr)
+    elif (args.mode == 4):
+        runtime(arr)
+    else:
+        fastmode(args)
+     
+def parseInput():
+    # Parse user input
+    parser = argparse.ArgumentParser(description="FFT Argument Parser")
+    
+    parser.add_argument('-m', '--mode', type=int, default=1, help="""
+        [1] (Default) for fast mode where the image is converted into its FFT form and displayed;
+        [2] for denoising where the image is denoised by applying an FFT, truncating high;
+        frequencies and then displayed; 
+        [3] for compressing and plot the image;
+        [4] for plotting the runtime graphs for the report
+        """) 
+    parser.add_argument('-i', '--image', type=str, default="moonlanding.png", help="""
+        Filename of the image we wish to take the DFT of
+        """)
+    
+    return parser.parse_args()
 
 def fastmode(args):
-    # 2D FFT of an image :param matrix: the image to be transformed :return: the transformed image
-    
+    print("Fast mode")
     
     
     

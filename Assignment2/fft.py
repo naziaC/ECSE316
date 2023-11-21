@@ -9,6 +9,7 @@ import matplotlib.image as image
 import matplotlib.pyplot as pyplot
 import numpy as np
 import argparse
+import cv2
 
 ##################################################
 #          Fourier Transform Functions           #
@@ -107,7 +108,18 @@ def inv_fft_2d(array):
 ##################################################
 
 def main(args):
-    arr = image.imread(args.image)
+    # resize the image to have length or diwth that is a power of 2
+    length = len(args.image[0])
+    width = len(args.image)
+    
+    # resize length and width to a power of 2
+    width = pow(2, (width - 1).bit_length())
+    length = pow(2, (length - 1).bit_length())
+
+    # resize the image
+    img = cv2.resize(args.image, (width, length))
+
+    arr = image.imread(img)
     
     if (args.mode == 1):
         fastmode(arr)
@@ -118,7 +130,7 @@ def main(args):
     elif (args.mode == 4):
         runtime(arr)
     else:
-        fastmode(args)
+        fastmode(arr)
      
 def parseInput():
     # Parse user input

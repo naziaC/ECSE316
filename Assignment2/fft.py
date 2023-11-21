@@ -84,6 +84,7 @@ def inv_fft_1d(array):
     # Divide & Conquer Colley-Tukey FFT Algorithm for inverse FFT
     N = len(array)
     k = np.arange(N)
+    constant = np.exp(2j * np.pi * k / N)
 
     # Base case
     if N <= 1:
@@ -93,8 +94,6 @@ def inv_fft_1d(array):
     # Divide: split even and odd indices
     even = inv_fft_1d(array[0::2])
     odd = inv_fft_1d(array[1::2])
-
-    constant = np.exp(2j * np.pi * k / N)
 
     # Conquer: merge results
     return np.concatenate([even + constant[:int(N/2)] * odd, even - constant[int(N/2):] * odd]) / N

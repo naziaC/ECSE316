@@ -1,6 +1,6 @@
 """
 @author: Nazia Chowdhury, Yu An Lu
-ECSE 316 Assignment 1
+ECSE 316 Assignment 2
 """
 
 # Import libraries
@@ -15,11 +15,15 @@ import cv2
 #          Fourier Transform Functions           #
 ##################################################
 
-# Xk = sum (x_n * e^(-2*pi*i*n*k/N)
 def dft_1d(array):
+    # DFT: Xk = sum (x_n * e^(-i2pikn/N) for k= 0 to N-1
+
+    # Copy original array
+    copy = array.copy()
+
     # For each value in the array
     for i in range(len(array)):
-        array[i] = np.sum(array * np.exp(-2j * np.pi * i * np.arange(len(array)) / len(array)))
+        array[i] = np.sum(copy * np.exp(-2j * np.pi * i * np.arange(len(array)) / len(array)))
     
     return array
 
@@ -39,19 +43,17 @@ def dft_2d(array):
     return fourierArray
 
 def fft_1d(array):
-    # For 1d Array
-    if (len(array.shape) == 1):
-        # Create a new array with the same dimensions as the original image
-        fourierArray = np.zeros(array.shape, dtype=complex)
-        
-        # Iterate through each pixel of the image
-        for u in range(array.shape[0]):
-            # Iterate through each pixel of the image
-            for x in range(array.shape[0]):
-                # Calculate the Fourier Transform
-                fourierArray[u] += array[x] * np.exp(-2j * np.pi * (u * x / array.shape[0]))
-        
-        return fourierArray
+    # Divide & Conquer Colley-Tukey FFT Algorithm
+    # Base case of recursion
+    if len(array) <= 1:
+        return array
+    
+    # Split even and odd terms
+    even = fft_1d(array[0::2])
+    odd = fft_1d(array[1::2])
+    
+    # Calculate the Fourier Transform
+    return np.concatenate([even + np.exp(-2j * np.pi * np.arange(len(array)) / len(array)) * odd, even - np.exp(-2j * np.pi * np.arange(len(array)) / len(array)) * odd])
     
 def inv_fft_1d(array):
     # Create a new array with the same dimensions as the original image

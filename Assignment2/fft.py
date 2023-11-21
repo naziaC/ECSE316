@@ -119,8 +119,8 @@ def main(args):
     # get image array
     img = image.imread(args.image)
 
-    # resize image
-    arr = cv2.resize(img, (length, width))
+    # resize image & transform into array
+    arr = np.asarray(cv2.resize(img, (length, width)))
     
     if (args.mode == 1):
         fastmode(arr)

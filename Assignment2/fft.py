@@ -14,7 +14,7 @@ import argparse
 #          Fourier Transform Functions           #
 ##################################################
 
-def naive1DFourierTransform(array):
+def dft_1d(array):
     # For 1d Array
     if (len(array.shape) == 1):
         # Create a new array with the same dimensions as the original image
@@ -28,21 +28,8 @@ def naive1DFourierTransform(array):
                 fourierArray[u] += array[x] * np.exp(-2j * np.pi * (u * x / array.shape[0]))
         
         return fourierArray
-    
-def inverseNaive1DFourierTransform(array):
-    # Create a new array with the same dimensions as the original image
-    fourierArray = np.zeros(array.shape, dtype=complex)
-    
-    # Iterate through each pixel of the image
-    for x in range(array.shape[0]):
-        # Iterate through each pixel of the image
-        for u in range(array.shape[0]):
-            # Calculate the Fourier Transform
-            fourierArray[x] += array[u] * np.exp(2j * np.pi * (u * x / array.shape[0]))
-    
-    return fourierArray
 
-def naive2DFourierTransform(array):
+def dft_2d(array):
     # Create a new array with the same dimensions as the original image
     fourierArray = np.zeros(array.shape, dtype=complex)
     
@@ -57,22 +44,7 @@ def naive2DFourierTransform(array):
     
     return fourierArray
 
-def inverseNaive2DFourierTransform(array):
-    # Create a new array with the same dimensions as the original image
-    fourierArray = np.zeros(array.shape, dtype=complex)
-    
-    # Iterate through each pixel of the image
-    for x in range(array.shape[0]):
-        for y in range(array.shape[1]):
-            # Iterate through each pixel of the image
-            for u in range(array.shape[0]):
-                for v in range(array.shape[1]):
-                    # Calculate the Fourier Transform
-                    fourierArray[x][y] += array[u][v] * np.exp(2j * np.pi * ((u * x / array.shape[0]) + (v * y / array.shape[1])))
-    
-    return fourierArray
-
-def fast1DFourierTransform(array):
+def fft_1d(array):
     # For 1d Array
     if (len(array.shape) == 1):
         # Create a new array with the same dimensions as the original image
@@ -87,7 +59,7 @@ def fast1DFourierTransform(array):
         
         return fourierArray
     
-def inverseFast1DFourierTransform(array):
+def inv_fft_1d(array):
     # Create a new array with the same dimensions as the original image
     fourierArray = np.zeros(array.shape, dtype=complex)
     
@@ -100,7 +72,7 @@ def inverseFast1DFourierTransform(array):
     
     return fourierArray
 
-def fast2DFourierTransform(array):
+def fft_2d(array):
     # Create a new array with the same dimensions as the original image
     fourierArray = np.zeros(array.shape, dtype=complex)
     
@@ -115,7 +87,7 @@ def fast2DFourierTransform(array):
     
     return fourierArray
 
-def inverseFast2DFourierTransform(array):
+def inv_fft_2d(array):
     # Create a new array with the same dimensions as the original image
     fourierArray = np.zeros(array.shape, dtype=complex)
     

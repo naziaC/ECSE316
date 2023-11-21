@@ -16,7 +16,8 @@ import cv2
 ##################################################
 
 def dft_1d(array):
-    # DFT: Xk = sum (x_n * e^(-i2pikn/N) for k= 0 to N-1
+    # Naive DFT for 1D array
+    # Formula: Xk = sum (x_n * e^(-i2pikn/N) for k= 0 to N-1
     N = len(array)
     k = np.arange(N)
 
@@ -30,10 +31,10 @@ def dft_1d(array):
     return array
 
 def dft_2d(array):
-    # DFT for 2D array
-    # Rows and Columns
-    N = array.shape[0]
-    M = array.shape[1]
+    # Naive DFT for 2D array
+    # N Rows and M Columns
+    N = len(array)
+    M = len(array[0])
     
     # for each row n
     for n in range(N):
@@ -46,9 +47,10 @@ def dft_2d(array):
     return array
 
 def fft_1d(array):
-    # Divide & Conquer Colley-Tukey FFT Algorithm
+    # FFT for 1D array
     N = len(array)
     k = np.arange(N)
+    constant = np.exp(-2j * np.pi * k / N)
 
     # Base case
     if N <= 1:
@@ -59,16 +61,14 @@ def fft_1d(array):
     even = fft_1d(array[0::2])
     odd = fft_1d(array[1::2])
 
-    constant = np.exp(-2j * np.pi * k / N)
-
     # Conquer: merge results
     return np.concatenate([even + constant[:int(N/2)] * odd, even - constant[int(N/2):] * odd])
 
 def fft_2d(array):
     # FFT for 2D array
-    # Rows and Columns
-    N = array.shape[0]
-    M = array.shape[1]
+    # N Rows and M Columns
+    N = len(array)
+    M = len(array[0])
     
     # for each row n
     for n in range(N):

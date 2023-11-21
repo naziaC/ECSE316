@@ -30,19 +30,20 @@ def dft_1d(array):
     return array
 
 def dft_2d(array):
-    # Create a new array with the same dimensions as the original image
-    fourierArray = np.zeros(array.shape, dtype=complex)
+    # DFT for 2D array
+    # Rows and Columns
+    N = array.shape[0]
+    M = array.shape[1]
     
-    # Iterate through each pixel of the image
-    for u in range(array.shape[0]):
-        for v in range(array.shape[1]):
-            # Iterate through each pixel of the image
-            for x in range(array.shape[0]):
-                for y in range(array.shape[1]):
-                    # Calculate the Fourier Transform
-                    fourierArray[u][v] += array[x][y] * np.exp(-2j * np.pi * ((u * x / array.shape[0]) + (v * y / array.shape[1])))
+    # for each row n
+    for n in range(N):
+        array[n] = dft_1d(array[n])
+        
+    # for each column m
+    for m in range(M):
+        array[:,m] = dft_1d(array[:,m])
     
-    return fourierArray
+    return array
 
 def fft_1d(array):
     # Divide & Conquer Colley-Tukey FFT Algorithm
@@ -63,6 +64,22 @@ def fft_1d(array):
     # Conquer: merge results
     return np.concatenate([even + constant[:int(N/2)] * odd, even - constant[int(N/2):] * odd])
 
+def fft_2d(array):
+    # FFT for 2D array
+    # Rows and Columns
+    N = array.shape[0]
+    M = array.shape[1]
+    
+    # for each row n
+    for n in range(N):
+        array[n] = fft_1d(array[n])
+        
+    # for each column m
+    for m in range(M):
+        array[:,m] = fft_1d(array[:,m])
+    
+    return array
+
 def inv_fft_1d(array):
     # Create a new array with the same dimensions as the original image
     fourierArray = np.zeros(array.shape, dtype=complex)
@@ -73,21 +90,6 @@ def inv_fft_1d(array):
         for u in range(array.shape[0]):
             # Calculate the Fourier Transform
             fourierArray[x] += array[u] * np.exp(2j * np.pi * (u * x / array.shape[0]))
-    
-    return fourierArray
-
-def fft_2d(array):
-    # Create a new array with the same dimensions as the original image
-    fourierArray = np.zeros(array.shape, dtype=complex)
-    
-    # Iterate through each pixel of the image
-    for u in range(array.shape[0]):
-        for v in range(array.shape[1]):
-            # Iterate through each pixel of the image
-            for x in range(array.shape[0]):
-                for y in range(array.shape[1]):
-                    # Calculate the Fourier Transform
-                    fourierArray[u][v] += array[x][y] * np.exp(-2j * np.pi * ((u * x / array.shape[0]) + (v * y / array.shape[1])))
     
     return fourierArray
 

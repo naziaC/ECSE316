@@ -17,13 +17,15 @@ import cv2
 
 def dft_1d(array):
     # DFT: Xk = sum (x_n * e^(-i2pikn/N) for k= 0 to N-1
+    N = len(array)
+    k = np.arange(N)
 
     # Copy original array
     copy = array.copy()
 
     # For each value in the array
-    for i in range(len(array)):
-        array[i] = np.sum(copy * np.exp(-2j * np.pi * i * np.arange(len(array)) / len(array)))
+    for n in range(N):
+        array[n] = np.sum(copy * np.exp(-2j * np.pi * n * k / N))
     
     return array
 
@@ -44,17 +46,23 @@ def dft_2d(array):
 
 def fft_1d(array):
     # Divide & Conquer Colley-Tukey FFT Algorithm
-    # Base case of recursion
-    if len(array) <= 1:
+    N = len(array)
+    k = np.arange(N)
+
+    # Base case
+    if N <= 1:
         return array
     
-    # Split even and odd terms
+    # Step case: 
+    # Divide: split even and odd indices
     even = fft_1d(array[0::2])
     odd = fft_1d(array[1::2])
-    
-    # Calculate the Fourier Transform
-    return np.concatenate([even + np.exp(-2j * np.pi * np.arange(len(array)) / len(array)) * odd, even - np.exp(-2j * np.pi * np.arange(len(array)) / len(array)) * odd])
-    
+
+    constant = np.exp(-2j * np.pi * k / N)
+
+    # Conquer: merge results
+    return np.concatenate([even + constant[:int(N/2)] * odd, even - constant[int(N/2):] * odd])
+
 def inv_fft_1d(array):
     # Create a new array with the same dimensions as the original image
     fourierArray = np.zeros(array.shape, dtype=complex)

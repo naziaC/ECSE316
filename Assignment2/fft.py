@@ -116,10 +116,11 @@ def main(args):
     width = pow(2, (width - 1).bit_length())
     length = pow(2, (length - 1).bit_length())
 
-    # resize the image
-    img = cv2.resize(args.image, (width, length))
+    # get image array
+    img = image.imread(args.image)
 
-    arr = image.imread(img)
+    # resize image
+    arr = cv2.resize(img, (length, width))
     
     if (args.mode == 1):
         fastmode(arr)

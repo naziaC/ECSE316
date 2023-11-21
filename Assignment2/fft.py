@@ -81,32 +81,39 @@ def fft_2d(array):
     return array
 
 def inv_fft_1d(array):
-    # Create a new array with the same dimensions as the original image
-    fourierArray = np.zeros(array.shape, dtype=complex)
+    # Divide & Conquer Colley-Tukey FFT Algorithm for inverse FFT
+    N = len(array)
+    k = np.arange(N)
+
+    # Base case
+    if N <= 1:
+        return array
     
-    # Iterate through each pixel of the image
-    for x in range(array.shape[0]):
-        # Iterate through each pixel of the image
-        for u in range(array.shape[0]):
-            # Calculate the Fourier Transform
-            fourierArray[x] += array[u] * np.exp(2j * np.pi * (u * x / array.shape[0]))
-    
-    return fourierArray
+    # Step case: 
+    # Divide: split even and odd indices
+    even = inv_fft_1d(array[0::2])
+    odd = inv_fft_1d(array[1::2])
+
+    constant = np.exp(2j * np.pi * k / N)
+
+    # Conquer: merge results
+    return np.concatenate([even + constant[:int(N/2)] * odd, even - constant[int(N/2):] * odd]) / N
 
 def inv_fft_2d(array):
-    # Create a new array with the same dimensions as the original image
-    fourierArray = np.zeros(array.shape, dtype=complex)
+    # FFT for 2D array
+    # Rows and Columns
+    N = array.shape[0]
+    M = array.shape[1]
     
-    # Iterate through each pixel of the image
-    for x in range(array.shape[0]):
-        for y in range(array.shape[1]):
-            # Iterate through each pixel of the image
-            for u in range(array.shape[0]):
-                for v in range(array.shape[1]):
-                    # Calculate the Fourier Transform
-                    fourierArray[x][y] += array[u][v] * np.exp(2j * np.pi * ((u * x / array.shape[0]) + (v * y / array.shape[1])))
+    # for each row n
+    for n in range(N):
+        array[n] = inv_fft_2d(array[n])
+        
+    # for each column m
+    for m in range(M):
+        array[:,m] = inv_fft_2d(array[:,m])
     
-    return fourierArray
+    return array
 
 ##################################################
 #                  Processing                    #

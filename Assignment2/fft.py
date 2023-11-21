@@ -15,20 +15,13 @@ import cv2
 #          Fourier Transform Functions           #
 ##################################################
 
+# Xk = sum (x_n * e^(-2*pi*i*n*k/N)
 def dft_1d(array):
-    # For 1d Array
-    if (len(array.shape) == 1):
-        # Create a new array with the same dimensions as the original image
-        fourierArray = np.zeros(array.shape, dtype=complex)
-        
-        # Iterate through each pixel of the image
-        for u in range(array.shape[0]):
-            # Iterate through each pixel of the image
-            for x in range(array.shape[0]):
-                # Calculate the Fourier Transform
-                fourierArray[u] += array[x] * np.exp(-2j * np.pi * (u * x / array.shape[0]))
-        
-        return fourierArray
+    # For each value in the array
+    for i in range(len(array)):
+        array[i] = np.sum(array * np.exp(-2j * np.pi * i * np.arange(len(array)) / len(array)))
+    
+    return array
 
 def dft_2d(array):
     # Create a new array with the same dimensions as the original image
@@ -120,7 +113,7 @@ def main(args):
     img = image.imread(args.image)
 
     # resize image & transform into array
-    arr = np.asarray(cv2.resize(img, (length, width)))
+    arr = np.asarray(cv2.resize(img, (length, width)), dtype=complex)
     
     if (args.mode == 1):
         fastmode(arr)

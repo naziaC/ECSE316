@@ -119,26 +119,26 @@ def inv_fft_2d(array):
 ##################################################
 
 def main(args):
-    # resize the image to have length or diwth that is a power of 2
-    length = len(args.image[0])
-    width = len(args.image)
+    # resize the image to have length or width that is a power of 2
+    img = image.imread(args.image)
+    
+    length = len(img[0])
+    width = len(img)
     
     # resize length and width to a power of 2
-    width = pow(2, (width - 1).bit_length())
-    length = pow(2, (length - 1).bit_length())
-
-    # get image array
-    img = image.imread(args.image)
+    width = 1 if width == 0 else pow(2, (width - 1).bit_length()) 
+    length = 1 if length == 0 else pow(2, (length - 1).bit_length())
 
     # resize image & transform into array
-    arr = np.asarray(cv2.resize(img, (length, width)), dtype=complex)
+    new_img = cv2.resize(img, (length, width), interpolation = cv2.INTER_AREA)
+    arr = np.asarray(new_img, dtype=complex)
     
     if (args.mode == 1):
-        fastmode(arr)
+        fastmode(arr, new_img)
     elif (args.mode == 2):
         denoise(arr)
     elif (args.mode == 3):
-        compress(arr)
+        compress(arr, new_img)
     elif (args.mode == 4):
         runtime(arr)
     else:
@@ -161,15 +161,28 @@ def parseInput():
     
     return parser.parse_args()
 
-def fastmode(args):
+
+
+def fastmode(args, img):
+    # Perform FFT
+    fft_img = fft_2d(args)
+    
+    # Plot the results
+    pyplot.figure("Mode 1")
+    pyplot.subplot(1, 2, 1)
+    pyplot.imshow(img, cmap="gray")
+    pyplot.title("Original Image")
+    pyplot.subplot(1, 2, 2)
+    pyplot.imshow(np.abs(fft_img), norm=colors.LogNorm())
+    pyplot.title("FFT Image")
+    pyplot.show() 
+    
     print("Fast mode")
-    
-    
     
 def denoise(args):
     print("Denoise mode")
     
-def compress(args):
+def compress(args, img):
     print("Compress mode")
     
 def runtime(args):

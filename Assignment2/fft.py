@@ -102,16 +102,16 @@ def inv_fft_1d(array):
 def inv_fft_2d(array):
     # FFT for 2D array
     # Rows and Columns
-    N = array.shape[0]
-    M = array.shape[1]
+    N = len(array)
+    M = len(array[0])
     
     # for each row n
     for n in range(N):
-        array[n] = inv_fft_2d(array[n])
+        array[n] = inv_fft_1d(array[n])
         
     # for each column m
     for m in range(M):
-        array[:,m] = inv_fft_2d(array[:,m])
+        array[:,m] = inv_fft_1d(array[:,m])
     
     return array
 
@@ -184,6 +184,25 @@ def denoise(args):
     print("Denoise mode")
     
 def compress(args, img):
+    ftt_img = fft_2d(args)
+    compession_levels = [0, 25, 50, 75, 95]
+    img_list = []
+    for i in range(5):
+        complement = 100 - compession_levels[i]
+        lower_bound = np.percentile(ftt_img, complement//2)
+        upper_bound = np.percentile(ftt_img, 100 - complement//2)
+        filtered = ftt_img * np.logical_or(ftt_img <= lower_bound, ftt_img >= upper_bound)
+        inversed = inv_fft_2d(filtered).real
+        img_list.append(inversed)
+    
+    pyplot.subplot(2,3,1), pyplot.imshow(img, cmap = 'gray')
+    pyplot.subplot(2,3,2), pyplot.imshow(img_list[0], cmap = 'gray')
+    pyplot.subplot(2,3,3), pyplot.imshow(img_list[1], cmap = 'gray')
+    pyplot.subplot(2,3,4), pyplot.imshow(img_list[2], cmap = 'gray')
+    pyplot.subplot(2,3,5), pyplot.imshow(img_list[3], cmap = 'gray')
+    pyplot.subplot(2,3,6), pyplot.imshow(img_list[4], cmap = 'gray')
+
+    pyplot.show()
     print("Compress mode")
     
 def runtime(args):

@@ -50,12 +50,12 @@ def dft_2d(array):
 def fft_1d(array):
     # FFT for 1D array
     N = len(array)
-    k = np.arange(N)
+    k = np.arange(N//2)
     constant = np.exp(-2j * np.pi * k / N)
-
+    
     # Base case
-    if N <= 1:
-        return array
+    if N <= 16:
+        return dft_1d(array)
     
     # Step case: 
     # Divide: split even and odd indices
@@ -63,7 +63,7 @@ def fft_1d(array):
     odd = fft_1d(array[1::2])
 
     # Conquer: merge results
-    return np.concatenate([even + constant[:int(N/2)] * odd, even - constant[int(N/2):] * odd])
+    return np.concatenate([even + constant * odd, even - constant * odd])
 
 def fft_2d(array):
     # FFT for 2D array
@@ -71,7 +71,6 @@ def fft_2d(array):
     N = len(array)
     M = len(array[0])
     
-    # for each row n
     for n in range(N):
         array[n] = fft_1d(array[n])
         
@@ -81,15 +80,30 @@ def fft_2d(array):
     
     return array
 
+def inv_dft_1d(array):
+    # Naive Inverse DFT for 1D array
+    N = len(array)
+    k = np.arange(N)
+
+    # Copy original array
+    copy = array.copy()
+
+    # For each value in the array
+    for n in range(N):
+        array[n] = np.sum(copy * np.exp(2j * np.pi * n * k / N))
+    
+    return array / N
+
 def inv_fft_1d(array):
     # Divide & Conquer Colley-Tukey FFT Algorithm for inverse FFT
     N = len(array)
     k = np.arange(N)
     constant = np.exp(2j * np.pi * k / N)
+    M = N // 2
 
     # Base case
-    if N <= 1:
-        return array
+    if N <= 16:
+        return inv_dft_1d(array)
     
     # Step case: 
     # Divide: split even and odd indices
@@ -97,7 +111,7 @@ def inv_fft_1d(array):
     odd = inv_fft_1d(array[1::2])
 
     # Conquer: merge results
-    return np.concatenate([even + constant[:int(N/2)] * odd, even - constant[int(N/2):] * odd]) / N
+    return np.concatenate([even + constant[:int(N / 2)] * odd, even + constant[int(N / 2):] * odd])
 
 def inv_fft_2d(array):
     # FFT for 2D array
@@ -131,7 +145,7 @@ def main(args):
     length = 1 if length == 0 else pow(2, (length - 1).bit_length())
 
     # resize image & transform into array
-    new_img = cv2.resize(img, (length, width), interpolation = cv2.INTER_AREA)
+    new_img = cv2.resize(img, (length, width))
     arr = np.asarray(new_img, dtype=complex)
     
     if (args.mode == 1):
@@ -162,11 +176,10 @@ def parseInput():
     
     return parser.parse_args()
 
-
-
 def fastmode(args, img):
     # Perform FFT
     fft_img = fft_2d(args)
+    # fft_img = np.fft.fft2(args) # numpy's FFT function for comparison
     
     # Plot the results
     pyplot.figure("Mode 1")
@@ -176,6 +189,7 @@ def fastmode(args, img):
     pyplot.subplot(1, 2, 2)
     pyplot.imshow(np.abs(fft_img), norm=colors.LogNorm())
     pyplot.title("FFT Image")
+    pyplot.colorbar()
     pyplot.show() 
     
     print("Fast mode")
@@ -198,15 +212,32 @@ def compress(args, img):
     # Plot the results
     pyplot.figure("Mode 3")
     pyplot.subplot(2,3,1), pyplot.imshow(img, cmap = 'gray'), pyplot.title("Original Image")
-    pyplot.subplot(2,3,2), pyplot.imshow(images[0], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[0]) + "%")
-    pyplot.subplot(2,3,3), pyplot.imshow(images[1], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[1]) + "%")
-    pyplot.subplot(2,3,4), pyplot.imshow(images[2], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[2]) + "%")
-    pyplot.subplot(2,3,5), pyplot.imshow(images[3], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[3]) + "%")
-    pyplot.subplot(2,3,6), pyplot.imshow(images[4], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[4]) + "%")
+    
+    for i in range(1, 6):
+         pyplot.subplot(2,3,i+1), pyplot.imshow(images[i-1], cmap = 'gray')
+         pyplot.title("Compression: " + str(compession[i-1]) + "%")
+         count = len(images[i-1])*len(images[i-1][0])
+         non_zeros = count * ((100 - compession[i-1]) / 100)
+         print("Compression at " + str(compession[i-1]) + "% has non zeros as: " + str(non_zeros) + " out of " + str(count))
 
     pyplot.show()
     print("Compress mode")
     
+def compress_image(image: np.ndarray, compress: int, count: int) -> np.ndarray:
+    rest = 100-compress
+    upper_bound = np.percentile(image, 100 - rest//2)
+    lower_bound = np.percentile(image, rest//2)
+
+    # Print number of non-zeros
+    print(f'non zero values for level {compress}% are {int(count * ((100 - compress) / 100.0))} out of {count}')
+
+    compressed_image = image * np.logical_or(image <= lower_bound, image >= upper_bound)
+    return inv_fft_2d(compressed_image)
+    
+def get_new_shape(n):
+    power = int(math.log(n, 2))
+    return int(pow(2, power+1))
+
 def runtime(args):
     print("Runtime mode")
     # Create 2D arrays of random elements of various sizes (square and powers of 2)

@@ -185,22 +185,24 @@ def denoise(args):
     
 def compress(args, img):
     ftt_img = fft_2d(args)
-    compession_levels = [0, 25, 50, 75, 95]
-    img_list = []
-    for i in range(5):
-        complement = 100 - compession_levels[i]
-        lower_bound = np.percentile(ftt_img, complement//2)
-        upper_bound = np.percentile(ftt_img, 100 - complement//2)
-        filtered = ftt_img * np.logical_or(ftt_img <= lower_bound, ftt_img >= upper_bound)
-        inversed = inv_fft_2d(filtered).real
-        img_list.append(inversed)
+    compession = [0, 25, 50, 75, 95]
+    images = []
     
-    pyplot.subplot(2,3,1), pyplot.imshow(img, cmap = 'gray')
-    pyplot.subplot(2,3,2), pyplot.imshow(img_list[0], cmap = 'gray')
-    pyplot.subplot(2,3,3), pyplot.imshow(img_list[1], cmap = 'gray')
-    pyplot.subplot(2,3,4), pyplot.imshow(img_list[2], cmap = 'gray')
-    pyplot.subplot(2,3,5), pyplot.imshow(img_list[3], cmap = 'gray')
-    pyplot.subplot(2,3,6), pyplot.imshow(img_list[4], cmap = 'gray')
+    for i in range(5):
+        complement = 100 - compession[i] # Get the remaining of the compression
+        lower_bound = np.percentile(ftt_img, complement//2) # Get the lower bound
+        upper_bound = np.percentile(ftt_img, 100 - complement//2) # Get the upper bound
+        transformed = ftt_img * np.logical_or(ftt_img <= lower_bound, ftt_img >= upper_bound) # Apply the compression
+        images.append(inv_fft_2d(transformed).real) # Inverse FFT and get the real part of the image
+    
+    # Plot the results
+    pyplot.figure("Mode 3")
+    pyplot.subplot(2,3,1), pyplot.imshow(img, cmap = 'gray'), pyplot.title("Original Image")
+    pyplot.subplot(2,3,2), pyplot.imshow(images[0], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[0]) + "%")
+    pyplot.subplot(2,3,3), pyplot.imshow(images[1], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[1]) + "%")
+    pyplot.subplot(2,3,4), pyplot.imshow(images[2], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[2]) + "%")
+    pyplot.subplot(2,3,5), pyplot.imshow(images[3], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[3]) + "%")
+    pyplot.subplot(2,3,6), pyplot.imshow(images[4], cmap = 'gray'), pyplot.title("Compressed at " + str(compession[4]) + "%")
 
     pyplot.show()
     print("Compress mode")

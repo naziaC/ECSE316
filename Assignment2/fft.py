@@ -192,7 +192,7 @@ def fastmode(args, img):
     pyplot.colorbar()
     pyplot.show()
     
-def denoise(arr, img, version=2):
+def denoise(arr, img, version=3):
     print("Denoise mode")
     # Output one by two subplot with original image and denoised image
     # Denoise: Apply FFT, apply procedures, and then apply an inverse FFT

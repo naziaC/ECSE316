@@ -8,5 +8,5 @@ To run on macOS:
 
 Dependencies:
     matplotlib
-    numpy
+    numpy (1.24.1)
     opencv (CV2)

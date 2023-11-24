@@ -150,11 +150,11 @@ def main(args):
     if (args.mode == 1):
         fastmode(arr, new_img)
     elif (args.mode == 2):
-        denoise(arr)
+        denoise(arr, new_img)
     elif (args.mode == 3):
         compress(arr, new_img)
     elif (args.mode == 4):
-        runtime(arr)
+        runtime()
     else:
         print("Invalid mode")
      
@@ -193,8 +193,54 @@ def fastmode(args, img):
     
     print("Fast mode")
     
-def denoise(args):
+def denoise(arr, img, version=1):
     print("Denoise mode")
+    # Output one by two subplot with original image and denoised image
+    # Denoise: Apply FFT, apply procedures, and then apply an inverse FFT
+    # Low frequency: ~0, ~2pi
+    # High frequency: ~pi
+    # Print # & fraction of non-zeros in the FFT image
+
+    # Apply FFT on array
+    fft_img = fft_2d(arr)
+
+    if version == 1:
+        # Truncate low frequencies
+        # Set all values of the 1th & 99th percentiles of the FFT image to 0
+        lower_bound = np.percentile(fft_img, 1)
+        upper_bound = np.percentile(fft_img, 99)
+        mask = np.logical_or(fft_img <= lower_bound, fft_img >= upper_bound)
+        fft_img *= mask
+
+    elif version == 2:
+        # Truncate high frequencies
+        # Set all values of the 50th percentile of the FFT image to 0
+        lower_bound = np.percentile(fft_img, 51)
+        upper_bound = np.percentile(fft_img, 49)
+        mask = np.logical_or(fft_img <= lower_bound, fft_img >= upper_bound)
+        fft_img *= mask
+
+    elif version == 3:  
+        # Threshold everything
+        # Set all values of the 50th percentile of the FFT image to pi
+        # Set all value of the 5th percentile to 0 & 95th percentile to 2pi
+        lower_bound = np.percentile(fft_img, 51)
+        upper_bound = np.percentile(fft_img, 49)
+        fft_img = np.where(fft_img < lower_bound, 0, np.where(fft_img > upper_bound, 2*np.pi, np.pi))
+
+    # Apply inverse FFT
+    denoised_img = inv_fft_2d(fft_img).real
+
+    # Plot the results
+    pyplot.figure("Mode 2")
+    pyplot.subplot(1, 2, 1)
+    pyplot.imshow(img, cmap="gray")
+    pyplot.title("Original Image")
+    pyplot.subplot(1, 2, 2)
+    pyplot.imshow(denoised_img, cmap="gray")
+    pyplot.title("Denoised Image")
+
+    pyplot.show()
     
 def compress(args, img):
     ftt_img = fft_2d(args)
@@ -221,8 +267,8 @@ def compress(args, img):
 
     pyplot.show()
     print("Compress mode")
-
-def runtime(args):
+    
+def runtime():
     print("Runtime mode")
     # Create 2D arrays of random elements of various sizes (square and powers of 2)
     # Start from 2^5 and move up to 2^10 or up to the size that computer can handle

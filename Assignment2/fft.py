@@ -176,6 +176,7 @@ def parseInput():
     return parser.parse_args()
 
 def fastmode(args, img):
+    print("Fast mode")
     # Perform FFT
     fft_img = fft_2d(args)
     # fft_img = np.fft.fft2(args) # numpy's FFT function for comparison
@@ -189,11 +190,9 @@ def fastmode(args, img):
     pyplot.imshow(np.abs(fft_img), norm=colors.LogNorm())
     pyplot.title("FFT Image")
     pyplot.colorbar()
-    pyplot.show() 
+    pyplot.show()
     
-    print("Fast mode")
-    
-def denoise(arr, img, version=4):
+def denoise(arr, img, version=2):
     print("Denoise mode")
     # Output one by two subplot with original image and denoised image
     # Denoise: Apply FFT, apply procedures, and then apply an inverse FFT
@@ -216,9 +215,9 @@ def denoise(arr, img, version=4):
 
     elif version == 2:
         # Truncate high frequencies
-        # Set all values of the 95th percentile of the FFT image to 0
-        lower_bound = np.percentile(fft_img, 5)
-        upper_bound = np.percentile(fft_img, 95)
+        # Set all values of the 80th percentile of the FFT image to 0
+        lower_bound = np.percentile(fft_img, 10)
+        upper_bound = np.percentile(fft_img, 90)
         fft_img = np.where((fft_img >= lower_bound) & (fft_img <= upper_bound), 0, fft_img)
         non_zeros = np.count_nonzero(fft_img)
 
@@ -233,7 +232,7 @@ def denoise(arr, img, version=4):
     
     elif version == 4:
         # Threshold high frequencies
-        # Set all values of the 95th percentile of the FFT image to 0.5 * np.pi
+        # Set all values of the 80th percentile of the FFT image to 0.5 * np.pi
         threshold = 0.5 * np.pi
         lower_bound = np.percentile(fft_img, 10)
         upper_bound = np.percentile(fft_img, 90)
@@ -268,6 +267,7 @@ def denoise(arr, img, version=4):
     pyplot.show()
     
 def compress(args, img):
+    print("Compress mode")
     ftt_img = fft_2d(args)
     compession = [0, 25, 50, 75, 95]
     images = []
@@ -291,7 +291,6 @@ def compress(args, img):
          print("Compression at " + str(compession[i-1]) + "% has non zeros as: " + str(non_zeros) + " out of " + str(count))
 
     pyplot.show()
-    print("Compress mode")
     
 def runtime(version=1):
     print("Runtime mode")

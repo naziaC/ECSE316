@@ -152,7 +152,7 @@ def main(args):
     elif (args.mode == 2):
         denoise(arr, new_img)
     elif (args.mode == 3):
-        compress(arr, new_img)
+        compress(arr)
     elif (args.mode == 4):
         runtime()
     else:
@@ -177,9 +177,12 @@ def parseInput():
 
 def fastmode(arr, img):
     print("Fast mode")
-    # Perform FFT
+    
+    # Apply FFT on array
     fft_img = fft_2d(arr)
-    # fft_img = np.fft.fft2(args) # numpy's FFT function for comparison
+    
+    # numpy's FFT function for comparison
+    # fft_img = np.fft.fft2(args)
     
     # Plot the results
     pyplot.figure("Mode 1")
@@ -266,9 +269,13 @@ def denoise(arr, img, version=3):
 
     pyplot.show()
     
-def compress(arr, img):
+def compress(arr):
     print("Compress mode")
+    
+    # Apply FFT on array
     fft_img = fft_2d(arr)
+    
+    # Compression levels and empty array to store compressed images
     compression = [0, 20, 40, 60, 80, 99.9]
     images = []
     
@@ -291,7 +298,7 @@ def compress(arr, img):
         non_zero_values = transformed[np.where(transformed != 0)]
         np.savetxt(f"compression_at_" + str(compression[i]) + ".txt", non_zero_values)
         
-        # Inverse FFT and get the image
+        # Inverse FFT to get the image
         new_image = inv_fft_2d(transformed).real
         images.append(new_image)
     
@@ -300,8 +307,7 @@ def compress(arr, img):
     
     for i in range(1,7):
          pyplot.subplot(2,3,i), pyplot.imshow(images[i-1], cmap = 'gray')
-         pyplot.title("Compression at " + str(compression[i-1]) + "%")         
-
+         pyplot.title("Compression at " + str(compression[i-1]) + "%")
 
     pyplot.show()
     

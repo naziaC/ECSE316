@@ -222,21 +222,6 @@ def compress(args, img):
 
     pyplot.show()
     print("Compress mode")
-    
-def compress_image(image: np.ndarray, compress: int, count: int) -> np.ndarray:
-    rest = 100-compress
-    upper_bound = np.percentile(image, 100 - rest//2)
-    lower_bound = np.percentile(image, rest//2)
-
-    # Print number of non-zeros
-    print(f'non zero values for level {compress}% are {int(count * ((100 - compress) / 100.0))} out of {count}')
-
-    compressed_image = image * np.logical_or(image <= lower_bound, image >= upper_bound)
-    return inv_fft_2d(compressed_image)
-    
-def get_new_shape(n):
-    power = int(math.log(n, 2))
-    return int(pow(2, power+1))
 
 def runtime(args):
     print("Runtime mode")

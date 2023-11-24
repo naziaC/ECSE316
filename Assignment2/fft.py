@@ -193,43 +193,68 @@ def fastmode(args, img):
     
     print("Fast mode")
     
-def denoise(arr, img, version=1):
+def denoise(arr, img, version=4):
     print("Denoise mode")
     # Output one by two subplot with original image and denoised image
     # Denoise: Apply FFT, apply procedures, and then apply an inverse FFT
     # Low frequency: ~0, ~2pi
     # High frequency: ~pi
     # Print # & fraction of non-zeros in the FFT image
+    count = len(arr)*len(arr[0])
+    non_zeros = 0
 
     # Apply FFT on array
     fft_img = fft_2d(arr)
 
     if version == 1:
         # Truncate low frequencies
-        # Set all values of the 1th & 99th percentiles of the FFT image to 0
-        lower_bound = np.percentile(fft_img, 1)
-        upper_bound = np.percentile(fft_img, 99)
-        mask = np.logical_or(fft_img <= lower_bound, fft_img >= upper_bound)
-        fft_img *= mask
+        # Set all values of the 0.001th percentile of the FFT image to 0
+        lower_bound = np.percentile(fft_img, 0.001)
+        upper_bound = np.percentile(fft_img, 99.999)
+        fft_img = np.where((fft_img <= lower_bound) | (fft_img >= upper_bound), 0, fft_img)
+        non_zeros = np.count_nonzero(fft_img)
 
     elif version == 2:
         # Truncate high frequencies
-        # Set all values of the 50th percentile of the FFT image to 0
-        lower_bound = np.percentile(fft_img, 51)
-        upper_bound = np.percentile(fft_img, 49)
-        mask = np.logical_or(fft_img <= lower_bound, fft_img >= upper_bound)
-        fft_img *= mask
+        # Set all values of the 95th percentile of the FFT image to 0
+        lower_bound = np.percentile(fft_img, 5)
+        upper_bound = np.percentile(fft_img, 95)
+        fft_img = np.where((fft_img >= lower_bound) & (fft_img <= upper_bound), 0, fft_img)
+        non_zeros = np.count_nonzero(fft_img)
 
     elif version == 3:  
-        # Threshold everything
-        # Set all values of the 50th percentile of the FFT image to pi
-        # Set all value of the 5th percentile to 0 & 95th percentile to 2pi
-        lower_bound = np.percentile(fft_img, 51)
-        upper_bound = np.percentile(fft_img, 49)
-        fft_img = np.where(fft_img < lower_bound, 0, np.where(fft_img > upper_bound, 2*np.pi, np.pi))
+        # Threshold low frequencies 
+        # Set all values of the 0.001th percentile of the FFT image to 0.5 * np.pi
+        threshold = 0.5 * np.pi
+        lower_bound = np.percentile(fft_img, 0.001)
+        upper_bound = np.percentile(fft_img, 99.999)
+        fft_img = np.where((fft_img <= lower_bound) | (fft_img >= upper_bound), threshold, fft_img)
+        non_zeros = np.count_nonzero(fft_img)
+    
+    elif version == 4:
+        # Threshold high frequencies
+        # Set all values of the 95th percentile of the FFT image to 0.5 * np.pi
+        threshold = 0.5 * np.pi
+        lower_bound = np.percentile(fft_img, 10)
+        upper_bound = np.percentile(fft_img, 90)
+        fft_img = np.where((fft_img >= lower_bound) & (fft_img <= upper_bound), threshold, fft_img)
+        non_zeros = np.count_nonzero(fft_img)
+    
+    elif version == 5:
+        # Threshold everything to 0.5 * np.pi
+        # Set all values of the FFT image to 0.5 * np.pi
+        threshold = 0.5 * np.pi
+        fft_img = np.full_like(fft_img, threshold, dtype=complex)
+        non_zeros = np.count_nonzero(fft_img)
 
     # Apply inverse FFT
     denoised_img = inv_fft_2d(fft_img).real
+
+    # Print # & fraction of non-zeros to the command line
+    print("##################################################")
+    print("Number of non-zeros in FFT: " + str(non_zeros))
+    print("Fraction of non-zeros in FFT: " + str(non_zeros / count))
+    print("##################################################")
 
     # Plot the results
     pyplot.figure("Mode 2")

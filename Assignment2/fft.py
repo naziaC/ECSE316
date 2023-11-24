@@ -175,10 +175,10 @@ def parseInput():
     
     return parser.parse_args()
 
-def fastmode(args, img):
+def fastmode(arr, img):
     print("Fast mode")
     # Perform FFT
-    fft_img = fft_2d(args)
+    fft_img = fft_2d(arr)
     # fft_img = np.fft.fft2(args) # numpy's FFT function for comparison
     
     # Plot the results
@@ -266,29 +266,42 @@ def denoise(arr, img, version=2):
 
     pyplot.show()
     
-def compress(args, img):
+def compress(arr, img):
     print("Compress mode")
-    ftt_img = fft_2d(args)
-    compession = [0, 25, 50, 75, 95]
+    fft_img = fft_2d(arr)
+    compression = [0, 20, 40, 60, 80, 99.9]
     images = []
     
-    for i in range(5):
-        complement = 100 - compession[i] # Get the remaining of the compression
-        lower_bound = np.percentile(ftt_img, complement//2) # Get the lower bound
-        upper_bound = np.percentile(ftt_img, 100 - complement//2) # Get the upper bound
-        transformed = ftt_img * np.logical_or(ftt_img <= lower_bound, ftt_img >= upper_bound) # Apply the compression
-        images.append(inv_fft_2d(transformed).real) # Inverse FFT and get the real part of the image
+    for i in range(len(compression)):
+        fft_img_copy = np.copy(fft_img)
+        complement = 100 - compression[i] # Get the remaining of the compression
+        
+        # Get the lower and upper bounds
+        lower_bound = np.percentile(fft_img, complement // 2)
+        upper_bound = np.percentile(fft_img, 100 - complement // 2)
+        
+        # Apply the compression
+        transformed = fft_img_copy * np.logical_or(fft_img_copy <= lower_bound, fft_img_copy >= upper_bound)
+        
+        # Print the amount of non-zeros
+        non_zeros = np.count_nonzero(transformed)
+        print("Compression at " + str(compression[i]) + "% has non-zeros: " + str(int(non_zeros)) + " out of " + str(len(transformed)*len(transformed[0])))
+        
+        # Save the non-zero values to a text file
+        non_zero_values = transformed[np.where(transformed != 0)]
+        np.savetxt(f"compression_at_" + str(compression[i]) + ".txt", non_zero_values)
+        
+        # Inverse FFT and get the image
+        new_image = inv_fft_2d(transformed).real
+        images.append(new_image)
     
     # Plot the results
     pyplot.figure("Mode 3")
-    pyplot.subplot(2,3,1), pyplot.imshow(img, cmap = 'gray'), pyplot.title("Original Image")
     
-    for i in range(1, 6):
-         pyplot.subplot(2,3,i+1), pyplot.imshow(images[i-1], cmap = 'gray')
-         pyplot.title("Compression: " + str(compession[i-1]) + "%")
-         count = len(images[i-1])*len(images[i-1][0])
-         non_zeros = count * ((100 - compession[i-1]) / 100)
-         print("Compression at " + str(compession[i-1]) + "% has non zeros as: " + str(non_zeros) + " out of " + str(count))
+    for i in range(1,7):
+         pyplot.subplot(2,3,i), pyplot.imshow(images[i-1], cmap = 'gray')
+         pyplot.title("Compression at " + str(compression[i-1]) + "%")         
+
 
     pyplot.show()
     

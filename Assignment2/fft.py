@@ -293,7 +293,7 @@ def compress(args, img):
     pyplot.show()
     print("Compress mode")
     
-def runtime():
+def runtime(version=1):
     print("Runtime mode")
     # Create 2D arrays of random elements of various sizes (square and powers of 2)
     # Start from 2^5 and move up to 2^10 or up to the size that computer can handle
@@ -303,45 +303,75 @@ def runtime():
     avgs_fft = []
     stds_fft = []
 
+    # Gather data for the plot by re-running the experiment 10 times for each size
+    # Obtain average runtime and standard deviation for each size
+    
     # Repeat the experiment 10 times for each size
     for i in range(len(sizes)):
-        runtime_dft = 0
-        runtime_fft = 0
+        runtime_dft = []
+        runtime_fft = []
 
-        # Generate 2D square array of random elements of size sizes[i]
-        array = np.random.rand(sizes[i], sizes[i])
+        # Generate 1D array of random elements of size sizes[i]
+        if version == 1:
+            array = np.random.rand(sizes[i])
+
+        elif version == 2:
+            array = np.random.rand(sizes[i], sizes[i])
+
+        # print("Problem Size: " + str(sizes[i]))
 
         # Run DFT and FFT on each array 10 times
         for j in range(10):
-            # Record runtime for each run
-            start = time.time()
-            dft_2d(array)
-            end = time.time()
-            runtime_dft += end - start
+            if version == 1:
+                # Record runtime for each run
+                start = time.time()
+                dft_1d(array)
+                end = time.time()
+                runtime_dft.append(end - start)
 
-            start = time.time()
-            fft_2d(array)
-            end = time.time()
-            runtime_fft += end - start
-        
+                start = time.time()
+                fft_1d(array)
+                end = time.time()
+                runtime_fft.append(end - start)
+            elif version == 2:
+                # Record runtime for each run
+                start = time.time()
+                dft_2d(array)
+                end = time.time()
+                runtime_dft.append(end - start)
+
+                start = time.time()
+                fft_2d(array)
+                end = time.time()
+                runtime_fft.append(end - start)
+            
         # Obtain average runtime and standard deviation for each size
         avgs_dft.append(np.mean(runtime_dft))
         stds_dft.append(np.std(runtime_dft))
         avgs_fft.append(np.mean(runtime_fft))
-        stds_fft.append(np.std(runtime_fft))    
+        stds_fft.append(np.std(runtime_fft))  
 
-    # Gather data for the plot by re-running the experiment 10 times for each size
-    # Obtain average runtime and standard deviation for each size
     # Plot the average runtime (seconds) (y-axis) against the size of the array (x-axis)
     # Two lines: one for DFT and one for FFT
     # Include error bars for standard deviation that represent confidence interval of 95%
 
+    # Print means & variances of the runtime versus problem size to command line
+    print("##################################################")
+    for i in range(len(sizes)):
+        print("Problem Size: " + str(sizes[i]))
+        print("Naive DFT: mean = {}, variance = {}".format(avgs_dft[i], stds_dft[i]**2))
+        print("FFT: mean = {}, variance = {}".format(avgs_fft[i], stds_fft[i]**2))
+        print("##################################################")
+
     # Plot DFT & FFT on same graph
     pyplot.title("DFT Runtime")
-    pyplot.xlabel("Array Size")
+    if version == 1:
+        pyplot.xlabel("1D Array Size")
+    elif version == 2:
+        pyplot.xlabel("2D Array Size")
     pyplot.ylabel("Runtime (s)")
-    pyplot.errorbar(sizes, avgs_dft, yerr=2*stds_dft, fmt='o', color='blue', label="naive DFT")
-    pyplot.errorbar(sizes, avgs_fft, yerr=2*stds_fft, fmt='o', color='red', label="FFT")
+    pyplot.errorbar(sizes, avgs_dft, yerr=[2 * std for std in stds_dft], color='red', label="naive DFT with 97% \confidence interval")
+    pyplot.errorbar(sizes, avgs_fft, yerr=[2 * std for std in stds_fft], color='blue', label="FFT with 97% \confidence interval")
     pyplot.legend(["naive DFT", "FFT"])
     pyplot.show()
 

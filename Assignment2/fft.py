@@ -156,7 +156,7 @@ def main(args):
     elif (args.mode == 4):
         runtime(arr)
     else:
-        fastmode(arr)
+        print("Invalid mode")
      
 def parseInput():
     # Parse user input

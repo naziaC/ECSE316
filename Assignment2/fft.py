@@ -99,7 +99,6 @@ def inv_fft_1d(array):
     N = len(array)
     k = np.arange(N)
     constant = np.exp(2j * np.pi * k / N)
-    M = N // 2
 
     # Base case
     if N <= 16:

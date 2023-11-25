@@ -33,17 +33,17 @@ def dft_1d(array):
 
 def dft_2d(array):
     # Naive DFT for 2D array
-    # N Rows and M Columns
+    # M Rows and N Columns
     N = len(array)
     M = len(array[0])
     
-    # for each row n
-    for n in range(N):
-        array[n] = dft_1d(array[n])
-        
-    # for each column m
+    # for each row m
     for m in range(M):
         array[:,m] = dft_1d(array[:,m])
+        
+    # for each column n
+    for n in range(N):
+        array[n] = dft_1d(array[n])
     
     return array
 
@@ -66,17 +66,18 @@ def fft_1d(array):
     return np.concatenate([even + constant * odd, even - constant * odd])
 
 def fft_2d(array):
-    # FFT for 2D array
-    # N Rows and M Columns
+    # FFT for 2D array 
+    # M Rows and N Columns
     N = len(array)
     M = len(array[0])
     
-    for n in range(N):
-        array[n] = fft_1d(array[n])
-        
-    # for each column m
+    # for each row m
     for m in range(M):
         array[:,m] = fft_1d(array[:,m])
+        
+    # for each column n
+    for n in range(N):
+        array[n] = fft_1d(array[n])
     
     return array
 
@@ -114,17 +115,17 @@ def inv_fft_1d(array):
 
 def inv_fft_2d(array):
     # FFT for 2D array
-    # Rows and Columns
+    # M Rows and N Columns
     N = len(array)
     M = len(array[0])
     
-    # for each row n
-    for n in range(N):
-        array[n] = inv_fft_1d(array[n])
-        
-    # for each column m
+    # for each row m
     for m in range(M):
         array[:,m] = inv_fft_1d(array[:,m])
+        
+    # for each column m
+    for n in range(N):
+        array[n] = inv_fft_1d(array[n])
     
     return array
 

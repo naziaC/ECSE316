@@ -295,10 +295,6 @@ def compress(arr):
         non_zeros = np.count_nonzero(transformed)
         print("Compression at " + str(compression[i]) + "% has non-zeros: " + str(int(non_zeros)) + " out of " + str(len(transformed)*len(transformed[0])))
         
-        # Save the non-zero values to a text file
-        non_zero_values = transformed[np.where(transformed != 0)]
-        np.savetxt(f"compression_at_" + str(compression[i]) + ".txt", non_zero_values)
-        
         # Inverse FFT to get the image
         new_image = inv_fft_2d(transformed).real
         images.append(new_image)
